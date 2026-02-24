@@ -1,0 +1,61 @@
+---
+import "../styles/global.css";
+// Supports weights 100-900
+import "@fontsource-variable/public-sans";
+// for lenis css
+import "lenis/dist/lenis.css";
+import Navbar from "../components/navigation/Navbar.astro";
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Hayden Rivas</title>
+	</head>
+	<body>
+		<div id="background-frame" class="fixed inset-0 bg-white -z-10"></div>
+
+		<div class="fixed top-5 left-5 right-5 z-40 pointer-events-none">
+			<div class="pointer-events-auto">
+				<Navbar />
+			</div>
+		</div>
+
+		<div
+			id="lenis-wrapper"
+			class="fixed inset-5 overflow-y-scroll rounded-3xl bg-transparent border border-black"
+		>
+			<div id="lenis-content">
+				<slot />
+			</div>
+		</div>
+	</body>
+
+	<script>
+		import Lenis from "lenis";
+
+		const lenisWrapper = document.querySelector(
+			"#lenis-wrapper"
+		) as HTMLDivElement;
+		const lenisContent = document.querySelector(
+			"#lenis-content"
+		) as HTMLDivElement;
+
+		const lenis = new Lenis({
+			wrapper: lenisWrapper,
+			content: lenisContent,
+			autoRaf: true,
+		});
+
+		// lenis.on("scroll", ScrollTrigger.update);
+
+		// gsap.ticker.add((time) => {
+		//   lenis.raf(time * 1000);
+		// });
+		// gsap.ticker.lagSmoothing(0);
+	</script>
+</html>

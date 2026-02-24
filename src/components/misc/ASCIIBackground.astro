@@ -1,0 +1,26 @@
+---
+
+---
+
+<pre
+	class="absolute h-screen leading-4 w-full text-amber-500 -z-10">
+</pre>
+
+<script>
+	import { type Settings, run } from "ts-play-core";
+	import program from "../../scripts/cursorfire";
+
+	const settings: Partial<Settings> = {
+		element: document.querySelector("pre"),
+        cursorMode: "Global",
+	};
+
+	run(program, settings)
+		.then(function (ctx) {
+			console.log(ctx);
+		})
+		.catch(function (e) {
+			console.warn(e.message);
+			console.log(e.error);
+		});
+</script>

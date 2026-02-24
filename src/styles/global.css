@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+    --color-brand: #f53c20;
+}
+
+html,
+body {
+	margin: 0;
+	width: 100%;
+	height: 100%;
+}
+body {
+	font-family: "Public Sans Variable", sans-serif;
+}
+@supports (font-variation-settings: normal) {
+	body {
+		font-family: "Public Sans Variable", sans-serif;
+	}
+}
+
+@font-face {
+  font-family: 'BigSlant';
+  src: url('/fonts/BIG-Slant-Ultra-Wide-FFP.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+    font-family: 'InstrumentSerif';
+    src: url('/fonts/instrumentserif-regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'InstrumentSerif';
+    src: url('/fonts/instrumentserif-italic.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+iconify-icon {
+    display: inline-block;
+}

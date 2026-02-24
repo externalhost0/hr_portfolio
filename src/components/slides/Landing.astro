@@ -1,0 +1,27 @@
+---
+import ASCIIBackground from "../misc/ASCIIBackground.astro"
+---
+<style>
+    span {
+		font-family: "InstrumentSerif", sans-serif;
+	}
+</style>
+
+<div>
+  <main>
+    <ASCIIBackground />
+    <div class="flex flex-col h-screen justify-center items-center">
+      <h1 class="font-bold text-8xl">Hi I'm <span class="text-neutral-300">@externalhost</span>!</h1>
+    </div>
+  </main>
+</div>
+
+<script>
+import { gsap } from "gsap";
+  gsap.to("#background-frame", {
+    backgroundColor: "#f53c20",
+    delay: 1,
+    duration: 2,
+    ease: "power4.out",
+  });
+</script>

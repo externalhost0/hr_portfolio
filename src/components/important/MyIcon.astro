@@ -1,0 +1,30 @@
+<style>
+	h1 {
+		font-family: "BigSlant", sans-serif;
+	}
+	.shine-text {
+		/* gradient has a bright narrow white stop in the middle */
+		background: linear-gradient(
+			60deg,
+			rgba(255, 255, 255, 0) 25%,
+			rgba(255, 255, 255, 0.45) 50%,
+			rgba(255, 255, 255, 0) 75%
+		);
+		background-size: 200% 100%; /* make space to move */
+		background-position: -50% 0; /* start off left */
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent; /* show bg through text */
+		transition: background-position 0.65s cubic-bezier(0.19, 1, 0.22, 1);
+	}
+
+	.shine-text:hover {
+		background-position: 150% 0; /* end position — sweeps through */
+	}
+</style>
+<div class="">
+	<a href="/" class="relative inline-block w-[120%]">
+		<h1 class="text-4xl shine-text absolute inset-0">HR</h1>
+		<h1 class="text-4xl">HR</h1>
+	</a>
+</div>
