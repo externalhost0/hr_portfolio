@@ -1,27 +1,46 @@
 ---
-import ASCIIBackground from "../misc/ASCIIBackground.astro"
+import ASCIIBackground from "../misc/ASCIIBackground.astro";
+import Puzzle from "../misc/Puzzle.astro";
 ---
-<style>
-    span {
-		font-family: "InstrumentSerif", sans-serif;
-	}
-</style>
 
 <div>
-  <main>
-    <ASCIIBackground />
-    <div class="flex flex-col h-screen justify-center items-center">
-      <h1 class="font-bold text-8xl">Hi I'm <span class="text-neutral-300">@externalhost</span>!</h1>
-    </div>
-  </main>
+	<main>
+		<ASCIIBackground />
+		<div class="flex flex-col h-screen justify-center items-center">
+			<h1 class="font-bold text-8xl fixed" id="titleheader">
+				I'm <span class="text-neutral-300 text-8xl font-caslon" id="myhandle">hayden rivas</span>{" "}!
+			</h1>
+            <Puzzle/>
+		</div>
+	</main>
 </div>
 
 <script>
-import { gsap } from "gsap";
-  gsap.to("#background-frame", {
-    backgroundColor: "#f53c20",
-    delay: 1,
-    duration: 2,
-    ease: "power4.out",
-  });
+	import { gsap } from "gsap";
+	let mainTl = gsap.timeline();
+
+	mainTl.to("#background-frame", {
+		backgroundColor: "#f53c20",
+		delay: 1,
+		duration: 2,
+		ease: "power4.out",
+	});
+	// mainTl.from("#myhandle", {
+	//     fontSize: '0px',
+	// 	duration: 0.8,
+	// 	ease: "back.out(1.7)",
+	// }, "<");
+	// mainTl.to("#titleheader", {
+	//     duration: 1.5,
+	//     scale: 0.25,
+	//     transformOrigin: "left bottom",
+	//     x: "-75vw",
+	//     xPercent: 100, // Offsets the negative move so the text stays on screen
+	//     y: "50vh",
+	//     yPercent: -100,
+
+	//     ease: "expo.inOut"
+	// });
+
+	mainTl.play();
 </script>

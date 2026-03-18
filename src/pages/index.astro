@@ -2,14 +2,16 @@
 import Landing from "../components/slides/Landing.astro";
 import CommonLayout from "../layouts/CommonLayout.astro";
 import Footer from "../components/navigation/Footer.astro";
-import Navbar from "../components/navigation/Navbar.astro";
 import About from "../components/slides/About.astro";
 import Projects from "../components/slides/Projects.astro";
+import Navbar from "../components/navigation/Navbar.astro";
 ---
 
 <CommonLayout>
+	<div slot="before-inset" class="fixed top-5 left-5 right-5 z-40 pointer-events-none">
+		<div class="pointer-events-auto">
+			<Navbar />
+		</div>
+	</div>
 	<Landing />
-    <Projects/>
-    <About/>
-	<Footer />
 </CommonLayout>

@@ -2,6 +2,7 @@
 
 @theme {
     --color-brand: #f53c20;
+    --font-caslon: 'Libre Caslon Condensed', serif;
 }
 
 html,
@@ -27,18 +28,18 @@ body {
   font-display: swap;
 }
 @font-face {
-    font-family: 'InstrumentSerif';
-    src: url('/fonts/instrumentserif-regular.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
+  font-family: 'Libre Caslon Condensed';
+  src: url('./fonts/LibreCaslonCondensed[wght].woff2') format('woff2-variations');
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
-    font-family: 'InstrumentSerif';
-    src: url('/fonts/instrumentserif-italic.ttf') format('truetype');
-    font-weight: normal;
-    font-style: italic;
-    font-display: swap;
+  font-family: 'Libre Caslon Condensed';
+  src: url('./fonts/LibreCaslonCondensed-Italic[wght].woff2') format('woff2-variations');
+  font-weight: 300 900;
+  font-style: italic;
+  font-display: swap;
 }
 
 iconify-icon {

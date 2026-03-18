@@ -2,33 +2,52 @@
 import MyIcon from "../important/MyIcon.astro";
 import "iconify-icon";
 
-import NavbarSections from "./NavbarSections";
 import Hamburger from "./Hamburger";
+import NavbarSection from "./NavbarSection.astro";
+const pathname = Astro.url.pathname;
 ---
+
 <div>
-    <div class="grid grid-cols-2 md:grid-cols-3 items-center px-4 py-3">
+	<div class="flex flex-row justify-between items-center px-4 py-3">
+		<div class="justify-self-start">
+			<MyIcon />
+		</div>
 
-            <div class="justify-self-start">
-                <MyIcon />
-            </div>
+		<div class="justify-self-end md:hidden">
+			<Hamburger client:idle />
+		</div>
 
-            <div class="justify-self-end md:hidden">
-                <Hamburger client:idle/>
-            </div>
+		<!-- <div class="hidden md:block">
+			<div
+				class="relative bg-brand justify-self-center flex flex-row justify-evenly items-center border gap-1 px-1 rounded-2xl py-1"
+			>
+				<NavbarSection title="About" href="/about" isActive={pathname === "/about"} />
+				<NavbarSection title="Projects" href="/projects" isActive={pathname === "/projects"} />
+				<NavbarSection title="Contact" href="/contact" isActive={pathname === "/contact"} />
+			</div>
+		</div> -->
 
-            <div class="hidden md:block">
-                <NavbarSections client:load />
-            </div>
-
-            <div class="hidden md:block">
-                <div class="justify-self-end flex flex-row justify-evenly items-center gap-2">
-                    <a href="https://github.com/externalhost0" aria-label="Github Link" target="_blank" rel="noopener noreferrer">
-                        <iconify-icon icon="mdi:github" class="hover:text-black/60 transition-colors" height={45} />
-                    </a>
-                    <a href="https://linkedin.com/in/hayden-rivas" aria-label="Linkedin Link" target="_blank" rel="noopener noreferrer">
-                        <iconify-icon icon="mdi:linkedin" class="hover:text-black/60 transition-colors" height={45} />
-                    </a>
-                </div>
-            </div>
-        </div>
+		<div class="hidden md:block">
+			<div class="justify-self-end flex flex-row justify-evenly items-center gap-2">
+				<a
+					href="https://github.com/externalhost0"
+					aria-label="Github Link"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					<iconify-icon icon="mdi:github" class="hover:text-black/60 transition-colors" height={45}
+					></iconify-icon>
+				</a>
+				<a
+					href="https://linkedin.com/in/hayden-rivas"
+					aria-label="Linkedin Link"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					<iconify-icon icon="mdi:linkedin" class="hover:text-black/60 transition-colors" height={45}
+					></iconify-icon>
+				</a>
+			</div>
+		</div>
+	</div>
 </div>

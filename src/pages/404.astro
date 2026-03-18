@@ -3,7 +3,29 @@ import CommonLayout from "../layouts/CommonLayout.astro";
 ---
 
 <CommonLayout>
-  <div class="w-full h-full flex items-center justify-center">
-    <h1 class="text-accent">404! How did you do that?</h1>
-  </div>
+	<div class="w-full h-screen flex gap-4 flex-col items-center justify-center">
+		<h1 class="text-5xl"><span class="font-bold">404!{" "}</span>How did you do that?</h1>
+		<a
+			href="/"
+			class="text-4xl bg-black/15 px-2 hover:px-4 hover:bg-black/25 transition-all shadow-[0px_4px_0px_0px_rgba(0,0,0,0.5)]"
+		>
+			go back home
+		</a>
+	</div>
 </CommonLayout>
+
+<script>
+	import { gsap } from "gsap";
+	gsap.to("#background-frame", {
+		keyframes: {
+			"0%": { backgroundColor: "#ffffff" },
+			"25%": { backgroundColor: "#f53c20" },
+			"50%": { backgroundColor: "#20a3f5" },
+			"75%": { backgroundColor: "#a320f5" },
+			"100%": { backgroundColor: "#ffffff" },
+		},
+		duration: 10,
+		repeat: -1,
+		ease: "linear",
+	});
+</script>
