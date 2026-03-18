@@ -3,7 +3,9 @@ namespace(function() {
 window.draw = function(puzzle, target='puzzle') {
   if (puzzle == null) return
   var svg = document.getElementById(target)
-  console.info('Drawing', puzzle, 'into', svg)
+  if (window.WITNESS_DEBUG === true) {
+    console.info('Drawing', puzzle, 'into', svg)
+  }
   while (svg.firstChild) svg.removeChild(svg.firstChild)
 
   // Prevent context menu popups within the puzzle
@@ -19,9 +21,19 @@ window.draw = function(puzzle, target='puzzle') {
     var pixelWidth = 41 * puzzle.width + 63
   }
   var pixelHeight = 41 * puzzle.height + 63
-  svg.setAttribute('viewbox', '0 0 ' + pixelWidth + ' ' + pixelHeight)
-  svg.setAttribute('width', pixelWidth)
-  svg.setAttribute('height', pixelHeight)
+  // Use correct SVG attribute casing so scaling works.
+  svg.setAttribute('viewBox', '0 0 ' + pixelWidth + ' ' + pixelHeight)
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet')
+
+  // Responsive mode: let CSS size the SVG (flexbox/grid/etc).
+  // If the embedding code sets `data-responsive="true"` we avoid fixed pixel sizing.
+  if (svg.dataset && svg.dataset.responsive === 'true') {
+    svg.removeAttribute('width')
+    svg.removeAttribute('height')
+  } else {
+    svg.setAttribute('width', pixelWidth)
+    svg.setAttribute('height', pixelHeight)
+  }
 
   var rect = createElement('rect')
   svg.appendChild(rect)

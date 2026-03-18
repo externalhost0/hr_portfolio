@@ -153,7 +153,7 @@ window.validateArrows = function(puzzle, region, regionData) {
     var y = pos.y + dir.y
     for (var i=0; i<100; i++) { // 100 is arbitrary, it's just here to avoid infinite loops.
       var line = puzzle.getLine(x, y)
-      console.spam('Testing', x, y, 'for arrow at', pos.x, pos.y, 'found', line)
+      if (window.WITNESS_DEBUG) console.spam('Testing', x, y, 'for arrow at', pos.x, pos.y, 'found', line)
       if (line == null && (x%2 !== 1 || y%2 !== 1)) break
       if (line > window.LINE_NONE) count++
       if (count > cell.count) break
@@ -162,7 +162,7 @@ window.validateArrows = function(puzzle, region, regionData) {
       if (puzzle.matchesSymmetricalPos(x, y, pos.x + dir.x, pos.y + dir.y)) break // Pillar exit condition (in case of looping)
     }
     if (count !== cell.count) {
-      console.log('Arrow at', pos.x, pos.y, 'crosses', count, 'lines, but should cross', cell.count)
+      if (window.WITNESS_DEBUG) console.log('Arrow at', pos.x, pos.y, 'crosses', count, 'lines, but should cross', cell.count)
       regionData.addInvalid(pos)
     }
   }
@@ -177,12 +177,12 @@ window.validateSizers = function(puzzle, region, regionData) {
     if (cell == null) continue
     if (cell.type == 'sizer') sizers.push(pos)
   }
-  console.debug('Found', sizers.length, 'sizers')
+  if (window.WITNESS_DEBUG) console.debug('Found', sizers.length, 'sizers')
   if (sizers.length == 0) return // No sizers -- no impact on sizer validity
 
   var sizerCount = regionSize / sizers.length
   if (sizerCount % 1 != 0) {
-    console.log('Region size', regionSize, 'is not a multiple of # sizers', sizers.length)
+    if (window.WITNESS_DEBUG) console.log('Region size', regionSize, 'is not a multiple of # sizers', sizers.length)
     for (var sizer of sizers) {
       regionData.addInvalid(sizer)
     }
@@ -191,7 +191,7 @@ window.validateSizers = function(puzzle, region, regionData) {
 
   if (puzzle.sizerCount == null) puzzle.sizerCount = sizerCount // No other sizes have been defined
   if (puzzle.sizerCount != sizerCount) {
-    console.log('sizerCount', sizerCount, 'does not match puzzle sizerCount', puzzle.sizerCount)
+    if (window.WITNESS_DEBUG) console.log('sizerCount', sizerCount, 'does not match puzzle sizerCount', puzzle.sizerCount)
     for (var sizer of sizers) {
       regionData.addInvalid(sizer)
     }

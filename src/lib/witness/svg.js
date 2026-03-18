@@ -32,7 +32,7 @@ window.drawSymbolWithSvg = function(svg, params, customMechanics) {
   else if (params.type == 'bridge' && customMechanics) bridge(svg, params)
   else if (params.type == 'arrow'  && customMechanics) arrow(svg, params)
   else if (params.type == 'sizer'  && customMechanics) sizer(svg, params)
-  else {console.error('Cannot draw unknown SVG type: ' + params.type)}
+  else if (window.WITNESS_DEBUG) {console.error('Cannot draw unknown SVG type: ' + params.type)}
 }
 
 function square(svg, params) {
@@ -260,7 +260,7 @@ function end(svg, params) {
     rect.setAttribute('y', parseInt(rect.getAttribute('y'), 10) + 12)
     circ.setAttribute('cy', parseInt(circ.getAttribute('cy'), 10) + 24)
   } else {
-    console.error('Endpoint direction not defined!', JSON.stringify(params))
+    if (window.WITNESS_DEBUG) console.error('Endpoint direction not defined!', JSON.stringify(params))
   }
 }
 

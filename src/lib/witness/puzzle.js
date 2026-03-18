@@ -467,6 +467,7 @@ window.Puzzle = class {
   }
 
   logGrid() {
+    if (!window.WITNESS_DEBUG) return
     var output = ''
     for (var y=0; y<this.height; y++) {
       var row = []

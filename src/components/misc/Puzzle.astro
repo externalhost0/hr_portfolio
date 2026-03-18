@@ -1,57 +1,39 @@
 ---
+import PuzzleClient from "./PuzzleClient";
+import type { WitnessPalette } from "./PuzzleClient";
+
+interface Props {
+	serialized: string;
+	theme?: "light" | "dark" | "custom";
+	palette?: WitnessPalette;
+	sensitivity?: number;
+	volume?: number;
+	debug?: boolean;
+	class?: string;
+	id?: string;
+}
+
+const {
+	serialized,
+	theme = "light",
+	palette,
+	sensitivity = 0.7,
+	volume = 0.12,
+	debug = false,
+	class: className,
+	id,
+} = Astro.props;
 ---
 
-<style>
-
-	/* https://stackoverflow.com/a/4407335 */
-	.noselect {
-		-webkit-touch-callout: none; /* iOS Safari */
-		-webkit-user-select: none; /* Safari */
-		-khtml-user-select: none; /* Konqueror HTML */
-		-moz-user-select: none; /* Old versions of Firefox */
-		-ms-user-select: none; /* Internet Explorer/Edge */
-		user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome, Edge, Opera and Firefox */
-	}
-
-	/* Use with "animation: turnOn 1s linear" to simulate panel power-on */
-	@keyframes turnOn {
-		0% {
-			opacity: 1;
-		}
-		100% {
-			opacity: 0;
-		}
-	}
-
-	/* Use with "animation: slideOpen 4.5s linear" to simulate random doors uncovering/covering */
-	@keyframes slideUp {
-		0% {
-			height: 100%;
-		}
-		100% {
-			height: 0%;
-		}
-	}
-</style>
-
-<div style="display: flex; justify-content: center; align-items: center">
-	<svg id="puzzle" style="pointer-events: auto"></svg>
+<div class="puzzle-wrapper" id={id} data-puzzle-wrapper>
+	<PuzzleClient
+		client:only="solid-js"
+		serialized={serialized}
+		theme={theme}
+		palette={palette}
+		sensitivity={sensitivity}
+		volume={volume}
+		debug={debug}
+		class={className}
+	/>
 </div>
-
-<script>
-	import "../../lib/witness/utilities.js";
-	import "../../lib/witness/svg.js";
-	import "../../lib/witness/polyominos.js";
-	import "../../lib/witness/puzzle.js";
-	import "../../lib/witness/validate.js";
-	import "../../lib/witness/custom_mechanics.js";
-	import "../../lib/witness/display2.js";
-	import "../../lib/witness/trace2.js";
-
-    const puzzleData = "{\"grid\":[[{\"type\":\"line\",\"line\":0,\"dir\":null,\"start\":false,\"end\":null},{\"type\":\"line\",\"line\":0,\"dir\":null,\"gap\":2,\"dot\":null,\"start\":null,\"end\":null},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"start\":true,\"dir\":null}],[{\"type\":\"line\",\"line\":0,\"dir\":null,\"gap\":2,\"dot\":null,\"start\":null,\"end\":null},null,{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"nonce\",\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"poly\",\"color\":\"yellow\",\"polyshape\":1,\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"poly\",\"color\":\"yellow\",\"polyshape\":1,\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null}],[{\"type\":\"line\",\"line\":0,\"dir\":null,\"start\":false,\"end\":null},{\"type\":\"line\",\"line\":0,\"dir\":null,\"gap\":2,\"dot\":null,\"start\":null,\"end\":null},{\"type\":\"line\",\"line\":0,\"dir\":null,\"end\":\"top\"},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null},{\"type\":\"line\",\"line\":0,\"dir\":null}]],\"largezero\":54,\"width\":3,\"height\":9,\"pillar\":false,\"settings\":{\"NEGATIONS_CANCEL_NEGATIONS\":true,\"SHAPELESS_ZERO_POLY\":false,\"PRECISE_POLYOMINOS\":true,\"FLASH_FOR_ERRORS\":true,\"FAT_STARTPOINTS\":false,\"CUSTOM_MECHANICS\":false},\"name\":\"Unnamed Puzzle\",\"startPoint\":{\"x\":0,\"y\":8},\"hasNegations\":false,\"hasPolyominos\":true}";
-	// @ts-ignore
-	const puzzle = window.Puzzle.deserialize(puzzleData);
-	// @ts-ignore
-	draw(puzzle);
-</script>

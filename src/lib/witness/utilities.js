@@ -101,35 +101,40 @@ namespace(function () {
 			});
 	};
 
-	window.LINE_PRIMARY = "#8FF";
-	window.LINE_SECONDARY = "#FF2";
+	// Default line colors; can be overridden by host before this file loads.
+	if (window.LINE_PRIMARY == null) window.LINE_PRIMARY = "#8FF";
+	if (window.LINE_SECONDARY == null) window.LINE_SECONDARY = "#FF2";
 
-	if (window.settings.theme == "night") {
-		window.BACKGROUND = "#221";
-		window.OUTER_BACKGROUND = "#070704";
-		window.FOREGROUND = "#751";
-		window.BORDER = "#666";
-		window.LINE_DEFAULT = "#888";
-		window.LINE_SUCCESS = "#BBB";
-		window.LINE_FAIL = "#000";
-		window.CURSOR = "#FFF";
-		window.TEXT_COLOR = "#AAA";
-		window.PAGE_BACKGROUND = "#000";
-		window.ALT_BACKGROUND = "#333"; // An off-black. Good for mild contrast.
-		window.ACTIVE_COLOR = "#555"; // Color for 'while the element is being pressed'
-	} else if (window.settings.theme == "light") {
-		window.BACKGROUND = "#0A8";
-		window.OUTER_BACKGROUND = "#113833";
-		window.FOREGROUND = "#344";
-		window.BORDER = "#000";
-		window.LINE_DEFAULT = "#AAA";
-		window.LINE_SUCCESS = "#FFF";
-		window.LINE_FAIL = "#000";
-		window.CURSOR = "#FFF";
-		window.TEXT_COLOR = "#000";
-		window.PAGE_BACKGROUND = "#FFF";
-		window.ALT_BACKGROUND = "#EEE"; // An off-white. Good for mild contrast.
-		window.ACTIVE_COLOR = "#DDD"; // Color for 'while the element is being pressed'
+	// If an embedding host wants to own ALL theme colors, it can set
+	// window.WITNESS_EXTERNAL_THEME = true before loading this file.
+	if (!window.WITNESS_EXTERNAL_THEME) {
+		if (window.settings.theme == "night" || window.settings.theme == "dark") {
+			window.BACKGROUND = "#221";
+			window.OUTER_BACKGROUND = "#070704";
+			window.FOREGROUND = "#751";
+			window.BORDER = "#666";
+			window.LINE_DEFAULT = "#888";
+			window.LINE_SUCCESS = "#BBB";
+			window.LINE_FAIL = "#000";
+			window.CURSOR = "#FFF";
+			window.TEXT_COLOR = "#AAA";
+			window.PAGE_BACKGROUND = "#000";
+			window.ALT_BACKGROUND = "#333"; // An off-black. Good for mild contrast.
+			window.ACTIVE_COLOR = "#555"; // Color for 'while the element is being pressed'
+		} else if (window.settings.theme == "light") {
+			window.BACKGROUND = "#0A8";
+			window.OUTER_BACKGROUND = "#113833";
+			window.FOREGROUND = "#344";
+			window.BORDER = "#000";
+			window.LINE_DEFAULT = "#AAA";
+			window.LINE_SUCCESS = "#FFF";
+			window.LINE_FAIL = "#000";
+			window.CURSOR = "#FFF";
+			window.TEXT_COLOR = "#000";
+			window.PAGE_BACKGROUND = "#FFF";
+			window.ALT_BACKGROUND = "#EEE"; // An off-white. Good for mild contrast.
+			window.ACTIVE_COLOR = "#DDD"; // Color for 'while the element is being pressed'
+		}
 	}
 
 	window.LINE_NONE = 0;
@@ -195,55 +200,14 @@ namespace(function () {
 	style.appendChild(document.createTextNode(animations));
 	document.head.appendChild(style);
 
-	// Custom logging to allow leveling
-	var consoleError = console.error;
-	var consoleWarn = console.warn;
-	var consoleInfo = console.log;
-	var consoleLog = console.log;
-	var consoleDebug = console.log;
-	var consoleSpam = console.log;
-	var consoleGroup = console.group;
-	var consoleGroupEnd = console.groupEnd;
-
-	window.setLogLevel = function (level) {
-		console.error = function () {};
-		console.warn = function () {};
-		console.info = function () {};
-		console.log = function () {};
-		console.debug = function () {};
-		console.spam = function () {};
-		console.group = function () {};
-		console.groupEnd = function () {};
-
-		if (level === "none") return;
-
-		// Instead of throw, but still red flags and is easy to find
-		console.error = consoleError;
-		if (level === "error") return;
-
-		// Less serious than error, but flagged nonetheless
-		console.warn = consoleWarn;
-		if (level === "warn") return;
-
-		// Default visible, important information
-		console.info = consoleInfo;
-		if (level === "info") return;
-
-		// Useful for debugging (mainly validation)
-		console.log = consoleLog;
-		if (level === "log") return;
-
-		// Useful for serious debugging (mainly graphics/misc)
-		console.debug = consoleDebug;
-		if (level === "debug") return;
-
-		// Useful for insane debugging (mainly tracing/recursion)
-		console.spam = consoleSpam;
-		console.group = consoleGroup;
-		console.groupEnd = consoleGroupEnd;
-		if (level === "spam") return;
-	};
-	setLogLevel("info");
+	// Provide a soft debug channel without touching the normal console methods.
+	if (typeof console.spam !== "function") {
+		console.spam = function () {
+			if (console.debug) {
+				console.debug.apply(console, arguments);
+			}
+		};
+	}
 
 	window.deleteElementsByClassName = function (rootElem, className) {
 		var elems = [];
@@ -388,7 +352,7 @@ namespace(function () {
 		document.body.style.background = window.PAGE_BACKGROUND;
 		var themeButton = document.createElement("button");
 		expandedSettings.appendChild(themeButton);
-		if (window.settings.theme == "night") {
+		if (window.settings.theme == "night" || window.settings.theme == "dark") {
 			themeButton.innerText = "Night theme";
 			themeButton.onpointerdown = function () {
 				window.settings.theme = "light";

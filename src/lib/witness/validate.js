@@ -74,7 +74,7 @@ window.validateUserData = function(puzzle, path) {
 // invalidElements: Symbols which are invalid (for the purpose of negating / flashing)
 // negations: Negation pairs (for the purpose of darkening)
 window.validate = function(puzzle, quick) {
-  console.log('Validating', puzzle)
+  if (window.WITNESS_DEBUG) console.log('Validating', puzzle)
   var puzzleData = new RegionData() // Assumed valid until we find an invalid element
 
   var needsRegions = false
@@ -92,13 +92,13 @@ window.validate = function(puzzle, quick) {
       if (cell.type == 'poly' || cell.type == 'ylop') puzzle.hasPolyominos = true
       if (cell.line > window.LINE_NONE) {
         if (cell.gap > window.GAP_NONE) {
-          console.log('Solution line goes over a gap at', x, y)
+          if (window.WITNESS_DEBUG) console.log('Solution line goes over a gap at', x, y)
           puzzleData.invalidElements.push({'x': x, 'y': y})
           if (quick) return puzzleData
         }
         if ((cell.dot === window.DOT_BLUE && cell.line === window.LINE_YELLOW) ||
             (cell.dot === window.DOT_YELLOW && cell.line === window.LINE_BLUE)) {
-          console.log('Incorrectly covered dot: Dot is', cell.dot, 'but line is', cell.line)
+          if (window.WITNESS_DEBUG) console.log('Incorrectly covered dot: Dot is', cell.dot, 'but line is', cell.line)
           puzzleData.invalidElements.push({'x': x, 'y': y})
           if (quick) return puzzleData
         }
@@ -121,8 +121,10 @@ window.validate = function(puzzle, quick) {
     }
     var regions = [monoRegion]
   }
-  console.log('Found', regions.length, 'region(s)')
-  console.debug(regions)
+  if (window.WITNESS_DEBUG) {
+    console.log('Found', regions.length, 'region(s)')
+    console.debug(regions)
+  }
 
   if (puzzle.settings.CUSTOM_MECHANICS) {
     for (var region of regions) {
@@ -140,7 +142,7 @@ window.validate = function(puzzle, quick) {
   } else {
     for (var region of regions) {
       var regionData = validateRegion(puzzle, region, quick)
-      console.log('Region valid:', regionData.valid())
+      if (window.WITNESS_DEBUG) console.log('Region valid:', regionData.valid())
       puzzleData.negations = puzzleData.negations.concat(regionData.negations)
       puzzleData.invalidElements = puzzleData.invalidElements.concat(regionData.invalidElements)
       // Note: Not using veryInvalid because I don't need to do logic on these elements, just flash them.
@@ -148,7 +150,7 @@ window.validate = function(puzzle, quick) {
       if (quick && !puzzleData.valid()) break
     }
   }
-  console.log('Puzzle has', puzzleData.invalidElements.length, 'invalid elements')
+  if (window.WITNESS_DEBUG) console.log('Puzzle has', puzzleData.invalidElements.length, 'invalid elements')
   return puzzleData
 }
 
@@ -170,7 +172,7 @@ window.validateRegion = function(puzzle, region, quick) {
       puzzle.updateCell2(pos.x, pos.y, 'type', 'nonce')
     }
   }
-  console.debug('Found', negationSymbols.length, 'negation symbols')
+  if (window.WITNESS_DEBUG) console.debug('Found', negationSymbols.length, 'negation symbols')
   if (negationSymbols.length === 0) {
     // No negation symbols in this region. Note that there must be negation symbols elsewhere
     // in the puzzle, since puzzle.hasNegations was true.
@@ -180,7 +182,7 @@ window.validateRegion = function(puzzle, region, quick) {
   // Get a list of elements that are currently invalid (before any negations are applied)
   // This cannot be quick, as we need a full list (for the purposes of negation).
   var regionData = regionCheck(puzzle, region, false)
-  console.debug('Negation-less regioncheck valid:', regionData.valid())
+  if (window.WITNESS_DEBUG) console.debug('Negation-less regioncheck valid:', regionData.valid())
 
   // Set 'nonce' back to 'nega' for the negation symbols
   for (var pos of negationSymbols) {
@@ -197,7 +199,7 @@ window.validateRegion = function(puzzle, region, quick) {
     veryInvalidElements[i].cell = puzzle.getCell(veryInvalidElements[i].x, veryInvalidElements[i].y)
   }
 
-  console.debug('Forcibly negating', veryInvalidElements.length, 'symbols')
+  if (window.WITNESS_DEBUG) console.debug('Forcibly negating', veryInvalidElements.length, 'symbols')
   var baseCombination = []
   while (negationSymbols.length > 0 && veryInvalidElements.length > 0) {
     var source = negationSymbols.pop()
@@ -222,7 +224,7 @@ window.validateRegion = function(puzzle, region, quick) {
 // doesn't actually modify the two lists, it just iterates through them with index/index2.
 function regionCheckNegations2(puzzle, region, negationSymbols, invalidElements, index=0, index2=0) {
   if (index2 >= negationSymbols.length) {
-    console.debug('0 negation symbols left, returning negation-less regionCheck')
+    if (window.WITNESS_DEBUG) console.debug('0 negation symbols left, returning negation-less regionCheck')
     return regionCheck(puzzle, region, false) // @Performance: We could pass quick here.
   }
 
@@ -238,7 +240,7 @@ function regionCheckNegations2(puzzle, region, negationSymbols, invalidElements,
       }
     }
 
-    console.debug(negationSymbols.length - i, 'negation symbol(s) left over with nothing to negate')
+    if (window.WITNESS_DEBUG) console.debug(negationSymbols.length - i, 'negation symbol(s) left over with nothing to negate')
     for (; i<negationSymbols.length; i++) {
       puzzle.updateCell2(negationSymbols[i].x, negationSymbols[i].y, 'type', 'nonce')
     }
@@ -268,13 +270,12 @@ function regionCheckNegations2(puzzle, region, negationSymbols, invalidElements,
   var firstRegionData = null
   for (var i=index; i<invalidElements.length; i++) {
     var target = invalidElements[i]
-    console.spam('Attempting negation pair', source, target)
-
-    console.group()
+    if (window.WITNESS_DEBUG) console.spam('Attempting negation pair', source, target)
+    if (window.WITNESS_DEBUG) console.group()
     puzzle.setCell(target.x, target.y, null)
     var regionData = regionCheckNegations2(puzzle, region, negationSymbols, invalidElements, i + 1, index2)
     puzzle.setCell(target.x, target.y, target.cell)
-    console.groupEnd()
+    if (window.WITNESS_DEBUG) console.groupEnd()
 
     if (!firstRegionData) {
       firstRegionData = regionData
@@ -297,7 +298,7 @@ function regionCheckNegations2(puzzle, region, negationSymbols, invalidElements,
 // since the region is only coordinate locations, and might be modified by regionCheckNegations2
 // @Performance: This is a pretty core function to the solve loop.
 function regionCheck(puzzle, region, quick) {
-  console.log('Validating region of size', region.length, region)
+  if (window.WITNESS_DEBUG) console.log('Validating region of size', region.length, region)
   var regionData = new RegionData()
 
   var squares = []
@@ -311,7 +312,7 @@ function regionCheck(puzzle, region, quick) {
 
     // Check for uncovered dots
     if (cell.dot > window.DOT_NONE) {
-      console.log('Dot at', pos.x, pos.y, 'is not covered')
+      if (window.WITNESS_DEBUG) console.log('Dot at', pos.x, pos.y, 'is not covered')
       regionData.addVeryInvalid(pos)
       if (quick) return regionData
     }
@@ -324,7 +325,7 @@ function regionCheck(puzzle, region, quick) {
       if (puzzle.getLine(pos.x, pos.y - 1) > window.LINE_NONE) count++
       if (puzzle.getLine(pos.x, pos.y + 1) > window.LINE_NONE) count++
       if (cell.count !== count) {
-        console.log('Triangle at grid['+pos.x+']['+pos.y+'] has', count, 'borders')
+        if (window.WITNESS_DEBUG) console.log('Triangle at grid['+pos.x+']['+pos.y+'] has', count, 'borders')
         regionData.addVeryInvalid(pos)
         if (quick) return regionData
       }
@@ -362,11 +363,11 @@ function regionCheck(puzzle, region, quick) {
   for (var star of stars) {
     var count = coloredObjects[star.color]
     if (count === 1) {
-      console.log('Found a', star.color, 'star in a region with 1', star.color, 'object')
+      if (window.WITNESS_DEBUG) console.log('Found a', star.color, 'star in a region with 1', star.color, 'object')
       regionData.addVeryInvalid(star)
       if (quick) return regionData
     } else if (count > 2) {
-      console.log('Found a', star.color, 'star in a region with', count, star.color, 'objects')
+      if (window.WITNESS_DEBUG) console.log('Found a', star.color, 'star in a region with', count, star.color, 'objects')
       regionData.addInvalid(star)
       if (quick) return regionData
     }
@@ -391,8 +392,10 @@ function regionCheck(puzzle, region, quick) {
     window.validateSizers(puzzle, region, regionData)
   }
 
-  console.debug('Region has', regionData.veryInvalidElements.length, 'very invalid elements')
-  console.debug('Region has', regionData.invalidElements.length, 'invalid elements')
+  if (window.WITNESS_DEBUG) {
+    console.debug('Region has', regionData.veryInvalidElements.length, 'very invalid elements')
+    console.debug('Region has', regionData.invalidElements.length, 'invalid elements')
+  }
   return regionData
 }
 })

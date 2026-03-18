@@ -91,7 +91,7 @@ window.solve = function(p, partialCallback, finalCallback) {
   } else { // 5x5 is the max for non-symmetry, non-pillar puzzles
     if (puzzle.width * puzzle.height <= 121) SOLVE_SYNC = true
   }
-  console.log('Puzzle is a', puzzle.width, 'by', puzzle.height, 'solving ' + (SOLVE_SYNC ? 'sync' : 'async'))
+  if (window.WITNESS_DEBUG) console.log('Puzzle is a', puzzle.width, 'by', puzzle.height, 'solving ' + (SOLVE_SYNC ? 'sync' : 'async'))
 
   // We pre-traverse the grid (only considering obvious failure states like going out of bounds),
   // and compute a total number of nodes that are reachable within some NODE_DEPTH steps.
@@ -100,7 +100,7 @@ window.solve = function(p, partialCallback, finalCallback) {
   for (var pos of startPoints) {
     countNodes(pos.x, pos.y, 0)
   }
-  console.log('Pretraversal found', nodes, 'nodes')
+  if (window.WITNESS_DEBUG) console.log('Pretraversal found', nodes, 'nodes')
   percentages = []
   for (var i=0; i<100; i++) {
     percentages.push(Math.floor(i * nodes / 100))
@@ -159,7 +159,7 @@ window.solve = function(p, partialCallback, finalCallback) {
 
   taskLoop(partialCallback, function() {
     var end = (new Date()).getTime()
-    console.log('Solved', puzzle, 'in', (end-start)/1000, 'seconds')
+    if (window.WITNESS_DEBUG) console.log('Solved', puzzle, 'in', (end-start)/1000, 'seconds')
     if (finalCallback) finalCallback(solutionPaths)
   })
   return solutionPaths
@@ -346,7 +346,7 @@ function solveLoop(x, y, numEndpoints, earlyExitData) {
 }
 
 window.cancelSolving = function() {
-  console.info('Cancelled solving')
+  if (window.WITNESS_DEBUG) console.info('Cancelled solving')
   window.MAX_SOLUTIONS = 0 // Causes all new solveLoop calls to exit immediately.
   tasks = []
 }
@@ -367,7 +367,7 @@ window.drawPathNoUI = function(puzzle, path) {
     var dx = 0
     var dy = 0
     if (path[i] === PATH_NONE) { // Reached an endpoint, move into it
-      console.debug('Reached endpoint')
+      if (window.WITNESS_DEBUG) console.debug('Reached endpoint')
       if (i != path.length-1) throw Error('Path contains ' + (path.length - 1 - i) + ' trailing directions')
       break
     } else if (path[i] === PATH_LEFT) dx = -1
@@ -414,14 +414,14 @@ window.drawPath = function(puzzle, path, target='puzzle') {
   var symStart = document.getElementById('symStart_' + target + '_' + x + '_' + y)
   window.onTraceStart(puzzle, {'x':x, 'y':y}, document.getElementById(target), start, symStart)
 
-  console.info('Drawing solution of length', path.length)
+  if (window.WITNESS_DEBUG) console.info('Drawing solution of length', path.length)
   for (var i=1; i<path.length; i++) {
     var cell = puzzle.getCell(x, y)
 
     var dx = 0
     var dy = 0
     if (path[i] === PATH_NONE) { // Reached an endpoint, move into it
-      console.debug('Reached endpoint')
+      if (window.WITNESS_DEBUG) console.debug('Reached endpoint')
       if (cell.end === 'left') {
         window.onMove(-24, 0)
       } else if (cell.end === 'right') {
@@ -449,7 +449,7 @@ window.drawPath = function(puzzle, path, target='puzzle') {
       throw Error('Path element ' + (i-1) + ' was not a valid path direction: ' + path[i])
     }
 
-    console.debug('Currently at', x, y, cell, 'moving', dx, dy)
+    if (window.WITNESS_DEBUG) console.debug('Currently at', x, y, cell, 'moving', dx, dy)
 
     x += dx
     y += dy
@@ -471,7 +471,7 @@ window.drawPath = function(puzzle, path, target='puzzle') {
   for (var x=0; x<puzzle.width; x++) {
     rows += ('' + x).padEnd(5, ' ') + '|'
   }
-  console.log(rows)
+  if (window.WITNESS_DEBUG) console.log(rows)
   for (var y=0; y<puzzle.height; y++) {
     var output = ('' + y).padEnd(3, ' ') + '|'
     for (var x=0; x<puzzle.width; x++) {
@@ -479,7 +479,7 @@ window.drawPath = function(puzzle, path, target='puzzle') {
       var dir = (cell != null && cell.dir != null ? cell.dir : '')
       output += dir.padEnd(5, ' ') + '|'
     }
-    console.log(output)
+    if (window.WITNESS_DEBUG) console.log(output)
   }
 }
 

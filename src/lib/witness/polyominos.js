@@ -162,21 +162,21 @@ window.polyFit = function(region, puzzle) {
     }
   }
   if (polys.length + ylops.length === 0) {
-    console.log('No polyominos or onimoylops inside the region, vacuously true')
+    if (window.WITNESS_DEBUG) console.log('No polyominos or onimoylops inside the region, vacuously true')
     return true
   }
   if (polyCount > 0 && polyCount !== regionSize) {
-    console.log('Combined size of polyominos and onimoylops', polyCount, 'does not match region size', regionSize)
+    if (window.WITNESS_DEBUG) console.log('Combined size of polyominos and onimoylops', polyCount, 'does not match region size', regionSize)
     return false
   }
   if (polyCount < 0) {
-    console.log('Combined size of onimoylops is greater than polyominos by', -polyCount)
+    if (window.WITNESS_DEBUG) console.log('Combined size of onimoylops is greater than polyominos by', -polyCount)
     return false
   }
   var key = null
   if (polyCount === 0) {
     if (puzzle.settings.SHAPELESS_ZERO_POLY) {
-      console.log('Combined size of polyominos and onimoylops is zero')
+      if (window.WITNESS_DEBUG) console.log('Combined size of polyominos and onimoylops is zero')
       return true
     }
     // These will be ordered by the order of cells in the region, which isn't exactly consistent.
@@ -213,7 +213,7 @@ window.polyFit = function(region, puzzle) {
 // If false, poly doesn't fit and grid is unmodified
 // If true, poly fits and grid is modified (with the placement)
 function tryPlacePolyshape(cells, x, y, puzzle, sign) {
-  console.spam('Placing at', x, y, 'with sign', sign)
+  if (window.WITNESS_DEBUG) console.spam('Placing at', x, y, 'with sign', sign)
   var numCells = cells.length
   for (var i=0; i<numCells; i++) {
     var cell = cells[i]
@@ -238,18 +238,18 @@ function placeYlops(ylops, i, polys, puzzle) {
   var ylopRotations = getRotations(ylop.polyshape)
   for (var x=1; x<puzzle.width; x+=2) {
     for (var y=1; y<puzzle.height; y+=2) {
-      console.log('Placing ylop', ylop, 'at', x, y)
+      if (window.WITNESS_DEBUG) console.log('Placing ylop', ylop, 'at', x, y)
       for (var polyshape of ylopRotations) {
         var cells = polyominoFromPolyshape(polyshape, true, puzzle.settings.PRECISE_POLYOMINOS)
         if (!tryPlacePolyshape(cells, x, y, puzzle, -1)) continue
-        console.group('')
+        if (window.WITNESS_DEBUG) console.group('')
         if (placeYlops(ylops, i+1, polys, puzzle)) return true
-        console.groupEnd('')
+        if (window.WITNESS_DEBUG) console.groupEnd('')
         if (!tryPlacePolyshape(cells, x, y, puzzle, +1)) continue
       }
     }
   }
-  console.log('Tried all ylop placements with no success.')
+  if (window.WITNESS_DEBUG) console.log('Tried all ylop placements with no success.')
   return false
 }
 
@@ -264,18 +264,18 @@ function placePolys(polys, puzzle) {
     for (var y=0; y<puzzle.height; y++) {
       var cell = row[y]
       if (cell > 0) {
-        console.log('Cell', x, y, 'has been overfilled and no ylops left to place')
+        if (window.WITNESS_DEBUG) console.log('Cell', x, y, 'has been overfilled and no ylops left to place')
         return false
       }
       if (allPolysPlaced && cell < 0 && x%2 === 1 && y%2 === 1) {
         // Normal, center cell with a negative value & no polys remaining.
-        console.log('All polys placed, but grid not full')
+        if (window.WITNESS_DEBUG) console.log('All polys placed, but grid not full')
         return false
       }
     }
   }
   if (allPolysPlaced) {
-    console.log('All polys placed, and grid full')
+    if (window.WITNESS_DEBUG) console.log('All polys placed, and grid full')
     return true
   }
 
@@ -293,7 +293,7 @@ function placePolys(polys, puzzle) {
   }
 
   if (openCells.length === 0) {
-    console.log('Polys remaining but grid full')
+    if (window.WITNESS_DEBUG) console.log('Polys remaining but grid full')
     return false
   }
 
@@ -301,30 +301,30 @@ function placePolys(polys, puzzle) {
     var attemptedPolyshapes = []
     for (var i=0; i<polys.length; i++) {
       var poly = polys[i]
-      console.spam('Selected poly', poly)
+      if (window.WITNESS_DEBUG) console.spam('Selected poly', poly)
       if (attemptedPolyshapes.includes(poly.polyshape)) {
-        console.spam('Polyshape', poly.polyshape, 'has already been attempted')
+        if (window.WITNESS_DEBUG) console.spam('Polyshape', poly.polyshape, 'has already been attempted')
         continue
       }
       attemptedPolyshapes.push(poly.polyshape)
       polys.splice(i, 1)
       for (var polyshape of getRotations(poly.polyshape)) {
-        console.spam('Selected polyshape', polyshape)
+        if (window.WITNESS_DEBUG) console.spam('Selected polyshape', polyshape)
         var cells = polyominoFromPolyshape(polyshape, false, puzzle.settings.PRECISE_POLYOMINOS)
         if (!tryPlacePolyshape(cells, openCell.x, openCell.y, puzzle, +1)) {
-          console.spam('Polyshape', polyshape, 'does not fit into', openCell.x, openCell.y)
+          if (window.WITNESS_DEBUG) console.spam('Polyshape', polyshape, 'does not fit into', openCell.x, openCell.y)
           continue
         }
-        console.group('')
+        if (window.WITNESS_DEBUG) console.group('')
         if (placePolys(polys, puzzle)) return true
-        console.groupEnd('')
+        if (window.WITNESS_DEBUG) console.groupEnd('')
         // Should not fail, as it's an inversion of the above tryPlacePolyshape
         tryPlacePolyshape(cells, openCell.x, openCell.y, puzzle, -1)
       }
       polys.splice(i, 0, poly)
     }
   }
-  console.log('Grid non-empty with >0 polys, but no valid recursion.')
+  if (window.WITNESS_DEBUG) console.log('Grid non-empty with >0 polys, but no valid recursion.')
   return false
 }
 
