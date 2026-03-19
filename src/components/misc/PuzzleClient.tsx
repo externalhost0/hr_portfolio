@@ -28,10 +28,22 @@ export type WitnessPalette = Partial<{
 	LINE_SECONDARY: string;
 }>;
 
+export type WitnessConfig = Partial<{
+	theme: WitnessTheme;
+	palette: WitnessPalette;
+	vignette: number;
+	sensitivity: number;
+	volume: number;
+	wittleTracing: boolean;
+	debug: boolean;
+	puzzleSettings: WitnessPuzzleRuleSettings;
+}>;
+
 export type TraceCompleteDetail = {
 	puzzle: unknown;
 	serialized: string;
 	solved: boolean;
+	aborted?: boolean;
 	rawPath: unknown[] | null;
 	puzzleData: unknown;
 };
@@ -54,22 +66,18 @@ declare global {
 		settings?: Record<string, string>;
 		WITNESS_EXTERNAL_THEME?: boolean;
 		WITNESS_DEBUG?: boolean;
+		abortTrace?: () => boolean;
 	}
 }
 
 export interface PuzzleProps {
 	serialized: string;
-	theme?: WitnessTheme;
-	palette?: WitnessPalette;
-	sensitivity?: number;
-	volume?: number;
-	wittleTracing?: boolean;
-	debug?: boolean;
-	puzzleSettings?: WitnessPuzzleRuleSettings;
+	config?: WitnessConfig;
 	class?: string;
-	style?: CSSStyleProperties;
+	style?: JSX.CSSProperties;
 	onSolved?: (detail: TraceCompleteDetail) => void;
 	onFailed?: (detail: TraceCompleteDetail) => void;
+	onAborted?: (detail: TraceCompleteDetail) => void;
 	onTraceComplete?: (detail: TraceCompleteDetail) => void;
 }
 
@@ -142,6 +150,11 @@ function applyPaletteOverrides(theme: WitnessTheme | undefined, palette?: Witnes
 	}
 }
 
+function clamp01(n: number) {
+	if (!Number.isFinite(n)) return 0;
+	return Math.max(0, Math.min(1, n));
+}
+
 function ensureHandlersMap(): Map<string, (detail: any) => void> {
 	if (!window.__witnessTraceCompletionHandlers) {
 		window.__witnessTraceCompletionHandlers = new Map();
@@ -155,55 +168,70 @@ export default function PuzzleClient(props: PuzzleProps) {
 	let registeredId: string | undefined;
 
 	onMount(async () => {
+		const cfg: WitnessConfig = props.config ?? {};
+
 		const id = `witness_${crypto.randomUUID?.() ?? Math.random().toString(16).slice(2)}`;
 		svgRef.id = id;
 		// Mark this SVG as responsive so the legacy renderer won't force pixel width/height.
 		svgRef.dataset.responsive = "true";
 		registeredId = id;
 
-		window.WITNESS_DEBUG = !!props.debug;
+		window.WITNESS_DEBUG = cfg.debug === true;
 		window.WITNESS_EXTERNAL_THEME = true;
 
 		if (!window.settings) window.settings = {};
-		if (typeof props.sensitivity === "number" && Number.isFinite(props.sensitivity)) {
-			window.settings.sensitivity = String(props.sensitivity);
+		if (typeof cfg.sensitivity === "number" && Number.isFinite(cfg.sensitivity)) {
+			window.settings.sensitivity = String(cfg.sensitivity);
 		}
-		if (typeof props.volume === "number" && Number.isFinite(props.volume)) {
-			window.settings.volume = String(props.volume);
+		if (typeof cfg.volume === "number" && Number.isFinite(cfg.volume)) {
+			window.settings.volume = String(cfg.volume);
 		}
-		if (typeof props.wittleTracing === "boolean") {
-			window.settings.wittleTracing = String(props.wittleTracing);
-		}
-		if (props.theme && props.theme !== "custom") {
-			// Map our \"dark\" alias to the original \"night\" theme understood by the library.
-			window.settings.theme = props.theme === "dark" ? "night" : props.theme;
+		if (typeof cfg.wittleTracing === "boolean") {
+			window.settings.wittleTracing = String(cfg.wittleTracing);
 		}
 
+		// Always set a deterministic base theme in settings.
+		// For custom palettes, we treat the base as light and then overlay the provided keys.
+		const effectiveTheme: WitnessTheme = cfg.theme ?? "light";
+		if (effectiveTheme === "dark") window.settings.theme = "night";
+		else window.settings.theme = "light";
+
 		// Apply theme/palette BEFORE the witness utilities build their CSS.
-		applyThemePalette(props.theme);
-		applyPaletteOverrides(props.theme, props.palette);
+		if (effectiveTheme === "custom") {
+			applyThemePalette("light");
+		} else {
+			applyThemePalette(effectiveTheme);
+		}
+		applyPaletteOverrides(effectiveTheme, cfg.palette);
+
+		// Vignette is controlled via config (with palette.VIGNETTE as fallback for older callers).
+		const vignette = effectiveTheme === "custom" ? clamp01(cfg.vignette ?? 0) : 0;
+		(window as any).VIGNETTE = vignette;
 
 		await loadWitnessOnce();
 
 		ensureHandlersMap().set(id, (detail) => {
 			const solved = !!detail?.solved;
+			const aborted = detail?.aborted === true;
 			const traceDetail: TraceCompleteDetail = {
 				puzzle: detail?.puzzle,
 				serialized: props.serialized,
 				solved,
+				aborted,
 				rawPath: detail?.rawPath ?? null,
 				puzzleData: detail?.puzzleData,
 			};
 
 			props.onTraceComplete?.(traceDetail);
-			if (solved) props.onSolved?.(traceDetail);
+			if (aborted) props.onAborted?.(traceDetail);
+			else if (solved) props.onSolved?.(traceDetail);
 			else props.onFailed?.(traceDetail);
 
 			wrapperRef.dispatchEvent(
 				new CustomEvent("puzzle:tracecomplete", { detail: traceDetail, bubbles: true }),
 			);
 			wrapperRef.dispatchEvent(
-				new CustomEvent(solved ? "puzzle:solved" : "puzzle:failed", {
+				new CustomEvent(aborted ? "puzzle:aborted" : solved ? "puzzle:solved" : "puzzle:failed", {
 					detail: traceDetail,
 					bubbles: true,
 				}),
@@ -220,12 +248,12 @@ export default function PuzzleClient(props: PuzzleProps) {
 		}
 
 		if (
-			props.puzzleSettings &&
+			cfg.puzzleSettings &&
 			typeof puzzle === "object" &&
 			puzzle != null &&
 			"settings" in (puzzle as any)
 		) {
-			(puzzle as any).settings = { ...(puzzle as any).settings, ...props.puzzleSettings };
+			(puzzle as any).settings = { ...(puzzle as any).settings, ...cfg.puzzleSettings };
 		}
 
 		if (!window.draw) throw new Error("Witness draw() not loaded");

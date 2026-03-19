@@ -28,8 +28,8 @@ namespace(function () {
 	Object.defineProperty(Event.prototype, "position", {
 		get: function () {
 			return {
-				x: event.pageX || event.clientX || (event.touches && event.touches[0].pageX) || null,
-				y: event.pageY || event.clientY || (event.touches && event.touches[0].pageY) || null,
+				x: this.pageX || this.clientX || (this.touches && this.touches[0].pageX) || null,
+				y: this.pageY || this.clientY || (this.touches && this.touches[0].pageY) || null,
 			};
 		},
 	});
@@ -101,12 +101,9 @@ namespace(function () {
 			});
 	};
 
-	// Default line colors; can be overridden by host before this file loads.
 	if (window.LINE_PRIMARY == null) window.LINE_PRIMARY = "#8FF";
 	if (window.LINE_SECONDARY == null) window.LINE_SECONDARY = "#FF2";
 
-	// If an embedding host wants to own ALL theme colors, it can set
-	// window.WITNESS_EXTERNAL_THEME = true before loading this file.
 	if (!window.WITNESS_EXTERNAL_THEME) {
 		if (window.settings.theme == "night" || window.settings.theme == "dark") {
 			window.BACKGROUND = "#221";
@@ -119,8 +116,8 @@ namespace(function () {
 			window.CURSOR = "#FFF";
 			window.TEXT_COLOR = "#AAA";
 			window.PAGE_BACKGROUND = "#000";
-			window.ALT_BACKGROUND = "#333"; // An off-black. Good for mild contrast.
-			window.ACTIVE_COLOR = "#555"; // Color for 'while the element is being pressed'
+			window.ALT_BACKGROUND = "#333"; 
+			window.ACTIVE_COLOR = "#555";
 		} else if (window.settings.theme == "light") {
 			window.BACKGROUND = "#0A8";
 			window.OUTER_BACKGROUND = "#113833";
@@ -132,8 +129,8 @@ namespace(function () {
 			window.CURSOR = "#FFF";
 			window.TEXT_COLOR = "#000";
 			window.PAGE_BACKGROUND = "#FFF";
-			window.ALT_BACKGROUND = "#EEE"; // An off-white. Good for mild contrast.
-			window.ACTIVE_COLOR = "#DDD"; // Color for 'while the element is being pressed'
+			window.ALT_BACKGROUND = "#EEE"; 
+			window.ACTIVE_COLOR = "#DDD";
 		}
 	}
 

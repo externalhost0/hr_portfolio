@@ -1,25 +1,16 @@
 ---
-import PuzzleClient from "./PuzzleClient";
-import type { WitnessPalette } from "./PuzzleClient";
+import PuzzleClient, { type WitnessConfig, type WitnessPalette } from "./PuzzleClient";
 
 interface Props {
 	serialized: string;
-	theme?: "light" | "dark" | "custom";
-	palette?: WitnessPalette;
-	sensitivity?: number;
-	volume?: number;
-	debug?: boolean;
+	config?: WitnessConfig;
 	class?: string;
 	id?: string;
 }
 
 const {
 	serialized,
-	theme = "light",
-	palette,
-	sensitivity = 0.7,
-	volume = 0.12,
-	debug = false,
+	config,
 	class: className,
 	id,
 } = Astro.props;
@@ -29,11 +20,7 @@ const {
 	<PuzzleClient
 		client:only="solid-js"
 		serialized={serialized}
-		theme={theme}
-		palette={palette}
-		sensitivity={sensitivity}
-		volume={volume}
-		debug={debug}
+		config={config}
 		class={className}
 	/>
 </div>

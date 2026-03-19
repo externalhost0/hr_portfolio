@@ -24,6 +24,104 @@ namespace(function () {
 		}
 	}
 
+	function notifyTraceAborted(svgId, puzzle) {
+		notifyTraceComplete({
+			svgId: svgId,
+			puzzle: puzzle,
+			rawPath: null,
+			solved: false,
+			puzzleData: null,
+			aborted: true,
+		});
+	}
+
+	function appendRoundCap(svg, cx, cy, className) {
+		if (svg == null || cx == null || cy == null || className == null) return null;
+		var cap = createElement("circle");
+		cap.setAttribute("class", className + " " + svg.id);
+		cap.setAttribute("cx", cx);
+		cap.setAttribute("cy", cy);
+		cap.setAttribute("r", 12);
+		var linesRoot = data.linesGroup || svg;
+		linesRoot.appendChild(cap);
+		return cap;
+	}
+
+	function ensureTraceEndCaps() {
+		if (data.svg == null) return;
+		// Remove previously injected caps for this active trace (if any).
+		if (data.endCapMain != null && data.endCapMain.parentElement != null) data.endCapMain.remove();
+		if (data.endCapSym != null && data.endCapSym.parentElement != null) data.endCapSym.remove();
+
+		if (data.cursor != null) {
+			var cx = data.cursor.getAttribute("cx");
+			var cy = data.cursor.getAttribute("cy");
+			var mainClass = data.puzzle && data.puzzle.symmetry == null ? "line-1" : "line-2";
+			data.endCapMain = appendRoundCap(data.svg, cx, cy, mainClass);
+		}
+
+		if (data.puzzle != null && data.puzzle.symmetry != null && data.symcursor != null) {
+			var sx = data.symcursor.getAttribute("cx");
+			var sy = data.symcursor.getAttribute("cy");
+			data.endCapSym = appendRoundCap(data.svg, sx, sy, "line-3");
+		}
+	}
+
+	var ABORT_FADE_OUT_MS = 2000;
+	var ABORT_FADE_OUT_EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
+
+	function abortFadeClearGrid(svg, puzzle) {
+		if (svg == null) return;
+
+		try {
+			if (data.path != null && data.path.length > 0 && data.path[data.path.length - 1] != null) {
+				data.path[data.path.length - 1].redraw();
+			}
+		} catch (e) {
+			// ignore
+		}
+		ensureTraceEndCaps();
+
+		// Cancel any in-progress fade.
+		if (data.abortFadeTimeout != null) {
+			try {
+				clearTimeout(data.abortFadeTimeout);
+			} catch (e) {
+				// ignore
+			}
+		}
+
+		// Fade the shared line group as a single unit to avoid darker overlap artifacts.
+		if (data.linesGroup != null) {
+			try {
+				data.linesGroup.style.transition = "opacity " + ABORT_FADE_OUT_MS + "ms " + ABORT_FADE_OUT_EASE;
+				data.linesGroup.style.opacity = "0";
+			} catch (e) {
+				// ignore
+			}
+		}
+
+		// Cursor reset is configurable; default is to remove it (legacy behavior).
+		window.deleteElementsByClassName(svg, "cursor");
+
+		data.abortFadeTimeout = setTimeout(function () {
+			clearGrid(svg, puzzle);
+			// Clear traced lines, but keep cursor position.
+			window.deleteElementsByClassName(svg, "line-1");
+			window.deleteElementsByClassName(svg, "line-2");
+			window.deleteElementsByClassName(svg, "line-3");
+			if (puzzle != null && typeof puzzle.clearLines === "function") puzzle.clearLines();
+			if (data.linesGroup != null) {
+				try {
+					data.linesGroup.style.transition = "";
+					data.linesGroup.style.opacity = "1";
+				} catch (e) {
+					// ignore
+				}
+			}
+		}, ABORT_FADE_OUT_MS);
+	}
+
 	class BoundingBox {
 		constructor(x1, x2, y1, y2, sym = false) {
 			this.raw = { x1: x1, x2: x2, y1: y1, y2: y2 };
@@ -120,9 +218,11 @@ namespace(function () {
 			this.poly2 = createElement("polygon");
 			this.pillarCirc = createElement("circle");
 			this.dir = dir;
-			data.svg.insertBefore(this.circ, data.cursor);
-			data.svg.insertBefore(this.poly2, data.cursor);
-			data.svg.insertBefore(this.pillarCirc, data.cursor);
+			// Insert visual elements into the shared trace-lines group.
+			var linesRoot = data.linesGroup || data.svg;
+			linesRoot.appendChild(this.circ);
+			linesRoot.appendChild(this.poly2);
+			linesRoot.appendChild(this.pillarCirc);
 			this.circ.setAttribute("cx", data.bbox.middle.x);
 			this.circ.setAttribute("cy", data.bbox.middle.y);
 
@@ -156,9 +256,9 @@ namespace(function () {
 				this.symCirc = createElement("circle");
 				this.symPoly2 = createElement("polygon");
 				this.symPillarCirc = createElement("circle");
-				data.svg.insertBefore(this.symCirc, data.cursor);
-				data.svg.insertBefore(this.symPoly2, data.cursor);
-				data.svg.insertBefore(this.symPillarCirc, data.cursor);
+				linesRoot.appendChild(this.symCirc);
+				linesRoot.appendChild(this.symPoly2);
+				linesRoot.appendChild(this.symPillarCirc);
 				this.symPoly1.setAttribute("class", "line-3 " + data.svg.id);
 				this.symCirc.setAttribute("class", "line-3 " + data.svg.id);
 				this.symPoly2.setAttribute("class", "line-3 " + data.svg.id);
@@ -194,29 +294,36 @@ namespace(function () {
 				}
 			} else {
 				// Only insert poly1 in non-startpoints
-				data.svg.insertBefore(this.poly1, data.cursor);
+				data.linesGroup.appendChild(this.poly1);
 				this.circ.setAttribute("r", 12);
 				if (data.puzzle.symmetry != null) {
-					data.svg.insertBefore(this.symPoly1, data.cursor);
+					data.linesGroup.appendChild(this.symPoly1);
 					this.symCirc.setAttribute("r", 12);
 				}
 			}
 		}
 
 		destroy() {
-			data.svg.removeChild(this.poly1);
-			data.svg.removeChild(this.circ);
-			data.svg.removeChild(this.poly2);
-			data.svg.removeChild(this.pillarCirc);
+			var linesRoot = data.linesGroup || data.svg;
+			if (this.poly1 && this.poly1.parentElement === linesRoot) linesRoot.removeChild(this.poly1);
+			if (this.circ && this.circ.parentElement === linesRoot) linesRoot.removeChild(this.circ);
+			if (this.poly2 && this.poly2.parentElement === linesRoot) linesRoot.removeChild(this.poly2);
+			if (this.pillarCirc && this.pillarCirc.parentElement === linesRoot)
+				linesRoot.removeChild(this.pillarCirc);
 			if (data.puzzle.symmetry != null) {
-				data.svg.removeChild(this.symPoly1);
-				data.svg.removeChild(this.symCirc);
-				data.svg.removeChild(this.symPoly2);
-				data.svg.removeChild(this.symPillarCirc);
+				if (this.symPoly1 && this.symPoly1.parentElement === linesRoot) linesRoot.removeChild(this.symPoly1);
+				if (this.symCirc && this.symCirc.parentElement === linesRoot) linesRoot.removeChild(this.symCirc);
+				if (this.symPoly2 && this.symPoly2.parentElement === linesRoot) linesRoot.removeChild(this.symPoly2);
+				if (this.symPillarCirc && this.symPillarCirc.parentElement === linesRoot)
+					linesRoot.removeChild(this.symPillarCirc);
 			}
 		}
 
 		redraw() {
+			// Overlap adjacent filled polygons slightly to avoid anti-aliased seams when the SVG is scaled.
+			// This is most noticeable in responsive layouts where viewBox scaling lands on fractional pixels.
+			var SEAM_OVERLAP = 0.35;
+
 			// Uses raw bbox because of endpoints
 			// Move the cursor and related objects
 			var x = clamp(data.x, data.bbox.x1, data.bbox.x2);
@@ -251,6 +358,10 @@ namespace(function () {
 			} else if (this.dir === MOVE_BOTTOM) {
 				points1.y2 = clamp(data.y, data.bbox.y1, data.bbox.middle.y);
 			}
+			points1.x1 -= SEAM_OVERLAP;
+			points1.x2 += SEAM_OVERLAP;
+			points1.y1 -= SEAM_OVERLAP;
+			points1.y2 += SEAM_OVERLAP;
 			this.poly1.setAttribute(
 				"points",
 				points1.x1 +
@@ -305,6 +416,10 @@ namespace(function () {
 			} else {
 				firstHalf = true;
 			}
+			points2.x1 -= SEAM_OVERLAP;
+			points2.x2 += SEAM_OVERLAP;
+			points2.y1 -= SEAM_OVERLAP;
+			points2.y2 += SEAM_OVERLAP;
 
 			this.poly2.setAttribute(
 				"points",
@@ -416,7 +531,7 @@ namespace(function () {
 		window.deleteElementsByClassName(svg, "line-1");
 		window.deleteElementsByClassName(svg, "line-2");
 		window.deleteElementsByClassName(svg, "line-3");
-		puzzle.clearLines();
+		if (puzzle != null) puzzle.clearLines();
 	}
 
 	// This copy is an exact copy of puzzle.getSymmetricalDir, except that it uses MOVE_* values instead of strings
@@ -440,6 +555,19 @@ namespace(function () {
 			var svg = start.parentElement;
 			data.tracing = true;
 			window.PLAY_SOUND("start");
+			// If we were in the middle of an abort fade, stop it so we don't clear the next trace.
+			if (data.abortFadeTimeout != null) {
+				try {
+					clearTimeout(data.abortFadeTimeout);
+				} catch (e) {
+					// ignore
+				}
+				data.abortFadeTimeout = null;
+			}
+			if (data.linesGroup != null) {
+				data.linesGroup.style.transition = "";
+				data.linesGroup.style.opacity = "1";
+			}
 			// Cleans drawn lines & puzzle state
 			clearGrid(svg, puzzle);
 			onTraceStart(puzzle, pos, svg, start, symStart);
@@ -454,7 +582,19 @@ namespace(function () {
 			// At endpoint and in main box
 			var cell = puzzle.getCell(data.pos.x, data.pos.y);
 			if (cell.end != null && data.bbox.inMain(data.x, data.y)) {
+				// We hit an endpoint: stop accepting pointer input and hide the cursor.
 				data.cursor.onpointerdown = null;
+				ensureTraceEndCaps();
+				try {
+					data.cursor.setAttribute("opacity", "0");
+					data.cursor.style && (data.cursor.style.opacity = "0");
+					if (data.symcursor != null) {
+						data.symcursor.setAttribute("opacity", "0");
+						data.symcursor.style && (data.symcursor.style.opacity = "0");
+					}
+				} catch (e) {
+					// ignore
+				}
 				setTimeout(function () {
 					// Run validation asynchronously so we can free the pointer immediately.
 					puzzle.endPoint = data.pos;
@@ -534,7 +674,8 @@ namespace(function () {
 				// Right-clicked (or double-tapped) and not at the end: Clear puzzle
 			} else if (event.isRightClick()) {
 				window.PLAY_SOUND("abort");
-				clearGrid(data.svg, puzzle);
+				abortFadeClearGrid(data.svg, puzzle);
+				notifyTraceAborted(data.svg && data.svg.id, puzzle);
 			} else {
 				// Exit lock but allow resuming from the cursor (Desktop only)
 				data.cursor.onpointerdown = function () {
@@ -546,6 +687,19 @@ namespace(function () {
 
 			unhookMovementEvents();
 		}
+	};
+
+	// Programmatic abort hook (optional). This mirrors the "right-click/double-tap" abort path.
+	window.abortTrace = function () {
+		if (data.tracing !== true) return false;
+		data.tracing = false;
+		if (data.svg == null || data.puzzle == null) return false;
+		window.PLAY_SOUND("abort");
+		abortFadeClearGrid(data.svg, data.puzzle);
+		notifyTraceAborted(data.svg && data.svg.id, data.puzzle);
+		// Stop accepting input.
+		unhookMovementEvents();
+		return true;
 	};
 
 	window.clearAnimations = function () {
@@ -573,6 +727,16 @@ namespace(function () {
 		cursor.setAttribute("cy", y);
 		svg.insertBefore(cursor, svg.getElementById("cursorPos"));
 
+		// Group all traced line visuals so we can fade them out as a single unit
+		// (prevents darker spots from alpha blending overlapping segments).
+		if (data.linesGroup != null && data.linesGroup.parentElement === svg) {
+			data.linesGroup.remove();
+		}
+		data.linesGroup = createElement("g");
+		data.linesGroup.setAttribute("data-trace-lines", "true");
+		data.linesGroup.style.opacity = "1";
+		svg.insertBefore(data.linesGroup, cursor);
+
 		data.svg = svg;
 		data.cursor = cursor;
 		data.x = x;
@@ -581,6 +745,8 @@ namespace(function () {
 		data.sym = puzzle.getSymmetricalPos(pos.x, pos.y);
 		data.puzzle = puzzle;
 		data.path = [];
+		data.endCapMain = null;
+		data.endCapSym = null;
 		puzzle.startPoint = { x: pos.x, y: pos.y };
 
 		if (pos.x % 2 === 1) {
@@ -603,7 +769,6 @@ namespace(function () {
 
 		clearAnimations();
 
-		// Add initial line segments + secondary symmetry cursor, if needed
 		if (puzzle.symmetry == null) {
 			data.puzzle.updateCell2(data.pos.x, data.pos.y, "type", "line");
 			data.puzzle.updateCell2(data.pos.x, data.pos.y, "line", window.LINE_BLACK);
@@ -620,11 +785,11 @@ namespace(function () {
 				data.bbox.raw.x2 + dx,
 				data.bbox.raw.y1 + dy,
 				data.bbox.raw.y2 + dy,
-				(sym = true),
+				true,
 			);
 
 			data.symcursor = createElement("circle");
-			svg.insertBefore(data.symcursor, data.cursor);
+			data.linesGroup.appendChild(data.symcursor);
 			data.symcursor.setAttribute("class", "line-3 " + data.svg.id);
 			data.symcursor.setAttribute("cx", symStart.getAttribute("cx"));
 			data.symcursor.setAttribute("cy", symStart.getAttribute("cy"));
@@ -652,10 +817,14 @@ namespace(function () {
 		data.path.push(new PathSegment(MOVE_NONE)); // Must be created after initializing data.symbbox
 	};
 
-	// In case the user exit the pointer lock via another means (clicking outside the window, hitting esc, etc)
-	// we still need to disengage our tracing hooks.
 	document.onpointerlockchange = function () {
-		if (document.pointerLockElement == null) unhookMovementEvents();
+		if (document.pointerLockElement == null) {
+			if (data.tracing === true) {
+				window.abortTrace();
+			} else {
+				unhookMovementEvents();
+			}
+		}
 	};
 
 	function unhookMovementEvents() {
@@ -664,6 +833,7 @@ namespace(function () {
 		document.ontouchstart = null;
 		document.ontouchmove = null;
 		document.ontouchend = null;
+		document.onkeydown = null;
 		if (document.exitPointerLock != null) document.exitPointerLock();
 		if (document.mozExitPointerLock != null) document.mozExitPointerLock();
 	}
@@ -714,6 +884,11 @@ namespace(function () {
 			var cell = data.puzzle.getCell(data.pos.x, data.pos.y);
 			if (cell.end != null && data.bbox.inMain(data.x, data.y)) {
 				window.trace(event, data.puzzle, null, null, null);
+			}
+		};
+		document.onkeydown = function (event) {
+			if (event.key === "Escape") {
+				window.abortTrace();
 			}
 		};
 	}

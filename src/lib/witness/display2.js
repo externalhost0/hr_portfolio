@@ -46,6 +46,29 @@ window.draw = function(puzzle, target='puzzle') {
   rect.setAttribute('width', pixelWidth - 10) // Removing border
   rect.setAttribute('height', pixelHeight - 10) // Removing border
 
+  // Optional vignette overlay (0..1). Defaults to off.
+  var vignette = (typeof window.VIGNETTE === 'number' ? window.VIGNETTE : 0)
+  if (vignette > 0) {
+    var defsV = window.createElement('defs')
+    var gradId = 'vignette_' + svg.id
+    defsV.innerHTML = '' +
+      '<radialGradient id=\"' + gradId + '\" cx=\"50%\" cy=\"50%\" r=\"70%\">\\n' +
+      '  <stop offset=\"0%\" stop-color=\"#000\" stop-opacity=\"0\" />\\n' +
+      '  <stop offset=\"65%\" stop-color=\"#000\" stop-opacity=\"0\" />\\n' +
+      '  <stop offset=\"100%\" stop-color=\"#000\" stop-opacity=\"' + vignette + '\" />\\n' +
+      '</radialGradient>\\n'
+    svg.appendChild(defsV)
+
+    var vignetteRect = window.createElement('rect')
+    vignetteRect.setAttribute('x', 5)
+    vignetteRect.setAttribute('y', 5)
+    vignetteRect.setAttribute('width', pixelWidth - 10)
+    vignetteRect.setAttribute('height', pixelHeight - 10)
+    vignetteRect.setAttribute('fill', 'url(#' + gradId + ')')
+    vignetteRect.setAttribute('style', 'pointer-events: none')
+    svg.appendChild(vignetteRect)
+  }
+
   drawCenters(puzzle, svg)
   drawGrid(puzzle, svg, target)
   drawStartAndEnd(puzzle, svg)
