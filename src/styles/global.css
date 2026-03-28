@@ -2,7 +2,11 @@
 
 @theme {
     --color-brand: #f53c20;
+    --color-bright: #fff4eb;
     --font-caslon: 'Libre Caslon Condensed', serif;
+    --font-optiker: 'Optiker-K', serif;
+    --font-3t3: '3t3-5x3', serif;
+    --font-04b: '04b_03b', serif;
 }
 
 html,
@@ -22,7 +26,7 @@ body {
 
 @font-face {
   font-family: 'BigSlant';
-  src: url('/fonts/BIG-Slant-Ultra-Wide-FFP.ttf') format('truetype');
+  src: url('/fonts/BIG-Slant-Ultra-Wide-FFP.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -41,6 +45,28 @@ body {
   font-style: italic;
   font-display: swap;
 }
+@font-face {
+    font-family: 'Optiker-K';
+    src: url('./fonts/Optiker-K.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: '3t3-5x3';
+    src: url('./fonts/3t3-5x3.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: '04b_03b';
+    src: url('./fonts/04b_03b.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 
 iconify-icon {
     display: inline-block;
