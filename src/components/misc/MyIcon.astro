@@ -1,0 +1,29 @@
+<style>
+	h1 {
+		font-family: "3t3-5x3";
+	}
+	.shine-text {
+		/* gradient has a bright narrow white stop in the middle */
+		background: linear-gradient(
+			60deg,
+			rgba(255, 255, 255, 0) 25%,
+			rgba(255, 255, 255, 0.45) 50%,
+			rgba(255, 255, 255, 0) 75%
+		);
+		background-size: 200% 100%; /* make space to move */
+		background-position: -50% 0; /* start off left */
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent; /* show bg through text */
+		transition: background-position 0.65s cubic-bezier(0.19, 1, 0.22, 1);
+	}
+
+	.shine-text:hover {
+		background-position: 150% 0; /* end position — sweeps through */
+	}
+</style>
+<div id="icon-cover">
+	<a href="/" class="relative flex justify-center items-center pl-2 pr-1 pt-2.5 pb-1.5 w-max ">
+		<h1 class="text-4xl text-black hover:text-amber-500 transition-colors ease-[cubic-bezier(0.25, 0.1, 0.25, 1)] duration-500">HR</h1>
+	</a>
+</div>

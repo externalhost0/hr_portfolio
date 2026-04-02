@@ -2,6 +2,7 @@
 
 @theme {
     --color-brand: #f53c20;
+    --color-brand-light: #f76611;
     --color-bright: #fff4eb;
     --font-caslon: 'Libre Caslon Condensed', serif;
     --font-optiker: 'Optiker-K', serif;
@@ -16,52 +17,49 @@ body {
 	height: 100%;
 }
 body {
-	font-family: "Public Sans Variable", sans-serif;
-}
-@supports (font-variation-settings: normal) {
-	body {
-		font-family: "Public Sans Variable", sans-serif;
-	}
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 @font-face {
   font-family: 'BigSlant';
-  src: url('/fonts/BIG-Slant-Ultra-Wide-FFP.woff2') format('woff2');
+  src: url('./src/assets/fonts/BIG-Slant-Ultra-Wide-FFP.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Libre Caslon Condensed';
-  src: url('./fonts/LibreCaslonCondensed[wght].woff2') format('woff2-variations');
+  src: url('./src/assets/fonts/LibreCaslonCondensed[wght].woff2') format('woff2-variations');
   font-weight: 300 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Libre Caslon Condensed';
-  src: url('./fonts/LibreCaslonCondensed-Italic[wght].woff2') format('woff2-variations');
+  src: url('./src/assets/fonts/LibreCaslonCondensed-Italic[wght].woff2') format('woff2-variations');
   font-weight: 300 900;
   font-style: italic;
   font-display: swap;
 }
 @font-face {
     font-family: 'Optiker-K';
-    src: url('./fonts/Optiker-K.woff2') format('woff2');
+    src: url('./src/assets/fonts/Optiker-K.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: '3t3-5x3';
-    src: url('./fonts/3t3-5x3.woff2') format('woff2');
+    src: url('./src/assets/fonts/3t3-5x3.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
+    ascent-override: 100%;
+    descent-override: 0%;
 }
 @font-face {
     font-family: '04b_03b';
-    src: url('./fonts/04b_03b.woff2') format('woff2');
+    src: url('./src/assets/fonts/04b_03b.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -70,4 +68,40 @@ body {
 
 iconify-icon {
     display: inline-block;
+}
+
+@keyframes ticker-right {
+    from { transform: translateX(-50%); }
+    to   { transform: translateX(0%); }
+}
+@keyframes ticker-left {
+    from { transform: translateX(0%); }
+    to   { transform: translateX(-50%); }
+}
+
+#top-track-content {
+    animation: ticker-right 12s linear infinite;
+}
+#bottom-track-content {
+    animation: ticker-left 12s linear infinite;
+}
+
+@keyframes hue-rotate {
+    from { filter: hue-rotate(0deg); }
+    to { filter: hue-rotate(360deg); }
+}
+.slow-hue-rotate {
+    animation: hue-rotate 6s linear infinite;
+}
+.slow-hue-rotate-opp {
+    animation: hue-rotate 6s linear 1s infinite reverse;
+}
+
+@keyframes brand-cycle {
+    0% { background-color: #f76611; }
+    50% { background-color: #f53c20; }
+    100% { background-color: #f76611;}
+}
+#background-frame {
+    animation: brand-cycle 6s linear infinite;
 }

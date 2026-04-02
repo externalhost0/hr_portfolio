@@ -1,14 +1,60 @@
 ---
 import Landing from "../components/slides/Landing.astro";
 import CommonLayout from "../layouts/CommonLayout.astro";
-import Footer from "../components/navigation/Footer.astro";
-import About from "../components/slides/About.astro";
-import Projects from "../components/slides/Projects.astro";
+import Intro from "../components/slides/Intro.astro";
+import "iconify-icon";
 import Navbar from "../components/navigation/Navbar.astro";
 ---
 
 <CommonLayout>
-	<div slot="before-inset" class="fixed top-5 left-5 right-5 z-40 pointer-events-none">
+    <div slot="before-inset" id="intro-wrapper">
+        <Intro />
+    </div>
+    <script>
+        function removeIntro() {
+            const wrapper = document.getElementById("intro-wrapper");
+            wrapper?.remove();
+            window.removeEventListener("intro:done", removeIntro);
+        }
+        window.addEventListener("intro:done", removeIntro);
+    </script>
+	<!-- some stuff we have outside the frame for fun -->
+	<!-- <div class="-top-0.5 left-5 fixed inline-flex items-center gap-1 group" slot="before-inset">
+		<div
+			class="w-0 overflow-hidden opacity-0 group-hover:opacity-100 group-hover:w-4 transition-all duration-200 ease-in-out flex items-center"
+		>
+			<iconify-icon
+				id="copy-icon"
+				icon="tabler:copy-filled"
+				height={15}
+				class="text-black/40 group-hover:text-blue-800/80 transition-colors duration-100"></iconify-icon>
+		</div>
+		<p
+			id="copy-email"
+			class="text-black select-none font-light underline decoration-black/50 group-hover:text-blue-800 group-hover:decoration-blue-800 active:scale-95 transition-all ease-in-out duration-200 cursor-pointer"
+		>
+			haydenr261@gmail.com
+		</p>
+	</div>
+
+	<script>
+		const el = document.getElementById("copy-email");
+		const icon = document.getElementById("copy-icon");
+
+		el?.addEventListener("click", () => {
+			navigator.clipboard.writeText("haydenr261@gmail.com");
+			icon?.setAttribute("icon", "tabler:copy-check-filled");
+            icon?.classList.add("!text-emerald-300");
+			setTimeout(() => {
+				icon?.setAttribute("icon", "tabler:copy-filled");
+                icon?.classList.remove("!text-emerald-300");
+			}, 1500);
+		});
+	</script> -->
+	<p class="text-black font-light bottom-0 right-5 fixed" slot="before-inset">
+		© {new Date().getFullYear()}
+	</p>
+	<div class="fixed z-110 top-3.5 left-5 right-5 pointer-events-none">
 		<div class="pointer-events-auto">
 			<Navbar />
 		</div>

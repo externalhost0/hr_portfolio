@@ -1,0 +1,188 @@
+---
+import { Image } from "astro:assets";
+import Tickerbar from "../misc/Tickerbar";
+import HoloImage from "../../assets/imgs/holo1.jpg";
+---
+
+<!-- inset will remove the before-inset need -->
+<div id="overlay-top" class="z-100 fixed top-0 inset-x-0 h-1/2 bg-black"></div>
+<div id="overlay-bottom" class="z-100 fixed bottom-0 inset-x-0 h-1/2 bg-black"></div>
+
+<div id="ticker-bars" class="h-full z-110 w-screen fixed pt-6 pb-10 flex flex-col justify-between">
+	<div id="top-bar" class="bg-neutral-950 opacity-0 fix overflow-hidden z-110">
+		<Tickerbar id="top" client:only="solid-js" />
+		<div class="relative overflow-hidden">
+			<Image
+				src={HoloImage}
+				loading="eager"
+				alt="holotopimage"
+				class="w-full slow-hue-rotate h-6 object-cover"
+			/>
+			<div
+				id="top-img-reveal"
+				class="absolute inset-y-0 w-[200%] pointer-events-none bg-linear-to-l from-black from-50% to-transparent"
+				style="transform: translateX(-50%);"
+			>
+			</div>
+		</div>
+		<div
+			id="top-bar-wipe"
+			class="absolute inset-y-0 w-[200%] pointer-events-none bg-linear-to-r from-black from-50% to-transparent"
+			style="transform: translateX(-100%);"
+		>
+		</div>
+	</div>
+	<div class="flex flex-col justify-center w-full items-center">
+		<p class="text-white text-6xl md:text-9xl font-04b">Loading...</p>
+	</div>
+	<div id="bottom-bar" class="bg-neutral-950 opacity-0 overflow-hidden z-110">
+		<Tickerbar id="bottom" client:only="solid-js" />
+		<div class="relative overflow-hidden">
+			<Image
+				src={HoloImage}
+				loading="eager"
+				alt="holobottomimage"
+				class="w-full slow-hue-rotate-opp h-6 object-cover"
+			/>
+			<div
+				id="bottom-img-reveal"
+				class="absolute inset-y-0 w-[200%] pointer-events-none bg-linear-to-r from-black from-50% to-transparent"
+				style="transform: translateX(0%);"
+			>
+			</div>
+		</div>
+		<div
+			id="bottom-bar-wipe"
+			class="absolute inset-y-0 w-[200%] pointer-events-none bg-linear-to-l from-black from-50% to-transparent"
+			style="transform: translateX(100%);"
+		>
+		</div>
+	</div>
+</div>
+
+<script>
+    import { gsap } from "gsap";
+	const kSkipIntro = true;
+
+	function runSetupLoading() {
+		const timeline = gsap.timeline();
+		timeline.set("#top-bar", { x: "-110vw", opacity: 1 });
+		timeline.set("#bottom-bar", { x: "110vw", opacity: 1 });
+
+		timeline
+			.to("#top-bar", {
+				x: 0,
+				ease: "power2.out",
+				delay: 0.4,
+			})
+			.to(
+				"#bottom-bar",
+				{
+					x: 0,
+					ease: "power2.out",
+				},
+				"<",
+			)
+			.to("#top-img-reveal", { x: "100%", duration: 0.5, ease: "power2.in", delay: 0.05 })
+			.to("#bottom-img-reveal", { x: "-100%", duration: 0.5, ease: "power2.in" }, "<");
+		return timeline;
+	}
+	function runCompleteLoading() {
+		const timeline = gsap.timeline();
+		const kLoadingPeriod: number = 1;
+
+		timeline
+			// .to(["#overlay-top", "#overlay-bottom"], {
+			// 	backgroundColor: "#000000",
+			// 	duration: 1.2,
+			// 	delay: 0.3,
+			// 	ease: "power2.inOut",
+			// })
+			.to("#top-track-content", {
+				duration: 0.35,
+				keyframes: {
+					opacity: [1, 0, 1, 0, 1, 0, 0.7, 0],
+					easeEach: "power4.out",
+				},
+				delay: kLoadingPeriod,
+			})
+			.to(
+				"#bottom-track-content",
+				{
+					duration: 0.35,
+					keyframes: {
+						opacity: [1, 0, 1, 0, 1, 0, 0.7, 0],
+						easeEach: "power4.out",
+					},
+				},
+				"<",
+			)
+			.to("#top-bar-wipe", {
+				x: "0%",
+				duration: 0.6,
+				ease: "power2.in",
+				delay: 0.1,
+			})
+			.to(
+				"#bottom-bar-wipe",
+				{
+					x: "-50%",
+					duration: 0.6,
+					ease: "power2.in",
+				},
+				"<",
+			)
+			.to("#ticker-bars", {
+				opacity: 0,
+				duration: 0.6,
+				ease: "power2.out",
+				delay: 0.1,
+			})
+			.to(
+				"#overlay-top",
+				{
+					yPercent: -100,
+					duration: 0.7,
+					ease: "power3.inOut",
+				},
+				"-=0.2",
+			)
+			.to(
+				"#overlay-bottom",
+				{
+					yPercent: 100,
+					duration: 0.7,
+					ease: "power3.inOut",
+				},
+				"<",
+			)
+			.set("#ticker-bars", { display: "none" })
+			.set(["#overlay-top", "#overlay-bottom"], { display: "none" })
+			.call(() => {
+				window.dispatchEvent(new CustomEvent("intro:done"));
+			});
+
+		return timeline;
+	}
+	if (!kSkipIntro) {
+        const readyIds = new Set();
+        window.addEventListener("ticker:ready", onTickerReady);
+        const tl = gsap.timeline();
+
+		function onTickerReady(e: any) {
+			if (!e.detail?.id) return;
+			readyIds.add(e.detail.id);
+			if (readyIds.has("top") && readyIds.has("bottom")) {
+				tl.add(runCompleteLoading());
+			}
+		}
+
+        tl.add(runSetupLoading());
+	} else {
+		gsap.set("#ticker-bars", { display: "none" });
+		gsap.set(["#overlay-top", "#overlay-bottom"], { display: "none" });
+        setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("intro:done"));
+        }, 100);
+	}
+</script>

@@ -1,0 +1,155 @@
+---
+interface Props {
+	tileSize: number;
+	id?: string;
+	pattern?: "random" | "wave" | "center";
+	tileDuration?: number;
+	stagger?: number;
+	color?: string;
+	class?: string;
+}
+
+const {
+	tileSize,
+	id,
+	pattern = "random",
+	tileDuration = 150,
+	stagger = 30,
+	color = "#000000",
+	class: className,
+} = Astro.props;
+---
+
+<div id={id} class:list={["pixel-cover-wrapper", className]} style="position: relative">
+	<slot />
+	<div
+		class="pixel-cover-overlay"
+		style="position: absolute; inset: 0; overflow: hidden; pointer-events: none;"
+		data-tile-size={tileSize}
+		data-pattern={pattern}
+		data-tile-duration={tileDuration}
+		data-stagger={stagger}
+		data-color={color}
+	>
+	</div>
+</div>
+
+<script>
+	import type { PixelCoverHandle } from "./PixelCover";
+
+	function initPixelCover(overlay: HTMLElement) {
+		const tileSize = Number(overlay.dataset.tileSize);
+		const pattern = overlay.dataset.pattern as "random" | "wave" | "center";
+		const tileDuration = Number(overlay.dataset.tileDuration);
+		const stagger = Number(overlay.dataset.stagger);
+		const color = overlay.dataset.color!;
+
+		let pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
+		let currentOrder: HTMLElement[] = [];
+
+		function buildTiles() {
+			overlay.innerHTML = "";
+			const cols = Math.ceil(overlay.clientWidth / tileSize);
+			const rows = Math.ceil(overlay.clientHeight / tileSize);
+			const frag = document.createDocumentFragment();
+			for (let r = 0; r < rows; r++) {
+				for (let c = 0; c < cols; c++) {
+					const tile = document.createElement("div");
+					tile.style.cssText = `position:absolute;left:${c * tileSize}px;top:${r * tileSize}px;width:${tileSize}px;height:${tileSize}px;background:${color};`;
+					frag.appendChild(tile);
+				}
+			}
+			overlay.appendChild(frag);
+		}
+
+		function getOrder(): HTMLElement[] {
+			const tiles = Array.from(overlay.children) as HTMLElement[];
+			const cols = Math.ceil(overlay.clientWidth / tileSize);
+			const rows = Math.ceil(overlay.clientHeight / tileSize);
+
+			if (pattern === "random") {
+				for (let i = tiles.length - 1; i > 0; i--) {
+					const j = Math.floor(Math.random() * (i + 1));
+					[tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+				}
+				return tiles;
+			}
+
+			if (pattern === "wave") {
+				return tiles.sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
+			}
+
+			// center: sort by distance from grid center, closest first
+			const cx = ((cols - 1) / 2) * tileSize;
+			const cy = ((rows - 1) / 2) * tileSize;
+			return tiles.sort((a, b) => {
+				const da = Math.hypot(parseFloat(a.style.left) - cx, parseFloat(a.style.top) - cy);
+				const db = Math.hypot(parseFloat(b.style.left) - cx, parseFloat(b.style.top) - cy);
+				return da - db;
+			});
+		}
+
+		function clearPending() {
+			pendingTimeouts.forEach(clearTimeout);
+			pendingTimeouts = [];
+		}
+
+		function reveal() {
+			clearPending();
+			(Array.from(overlay.children) as HTMLElement[]).forEach((t) => {
+				t.style.display = "block";
+				t.style.opacity = "1";
+				t.style.transition = "";
+			});
+
+			currentOrder = getOrder();
+			currentOrder.forEach((tile, i) => {
+				pendingTimeouts.push(
+					setTimeout(() => {
+						if (tileDuration === 0) {
+							tile.style.opacity = "0";
+							tile.style.display = "none";
+						} else {
+							tile.style.transition = `opacity ${tileDuration}ms`;
+							tile.style.opacity = "0";
+							pendingTimeouts.push(
+								setTimeout(() => {
+									tile.style.display = "none";
+								}, tileDuration),
+							);
+						}
+					}, i * stagger),
+				);
+			});
+		}
+
+		function hide() {
+			clearPending();
+			if (currentOrder.length === 0) currentOrder = getOrder();
+
+			(Array.from(overlay.children) as HTMLElement[]).forEach((t) => {
+				t.style.display = "block";
+				t.style.opacity = "0";
+				t.style.transition = "";
+			});
+
+			[...currentOrder].reverse().forEach((tile, i) => {
+				pendingTimeouts.push(
+					setTimeout(() => {
+						if (tileDuration === 0) {
+							tile.style.opacity = "1";
+						} else {
+							tile.style.transition = `opacity ${tileDuration}ms`;
+							tile.style.opacity = "1";
+						}
+					}, i * stagger),
+				);
+			});
+		}
+
+		buildTiles();
+		(overlay as HTMLElement & { _pixelCover: PixelCoverHandle })._pixelCover = { reveal, hide };
+	}
+
+	document.querySelectorAll<HTMLElement>(".pixel-cover-overlay").forEach(initPixelCover);
+</script>

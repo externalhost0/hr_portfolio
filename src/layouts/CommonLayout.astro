@@ -10,46 +10,21 @@ import "lenis/dist/lenis.css";
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Hayden Rivas</title>
+        <link rel="preload" href="./src/assets/fonts/04b_03b.woff2" as="font" type="font/woff2" crossorigin />
 	</head>
 	<body>
-		<div id="background-frame" class="fixed inset-0 bg-white -z-10"></div>
+		<div id="background-frame" class="fixed inset-0 bg-brand-light -z-10"></div>
         <slot name="before-inset"/>
         <!-- before switching to a scrollless site, this had overflow-y-scroll -->
 		<div
-			id="lenis-wrapper"
-			class="fixed inset-5 rounded-3xl bg-transparent border border-black"
+			id="wrapper"
+			class="fixed inset-5 overflow-hidden bg-transparent border border-black"
 		>
-			<!-- <div id="lenis-content"> -->
-				<slot />
-			<!-- </div> -->
+			<slot />
 		</div>
 	</body>
-
-	<script>
-		import Lenis from "lenis";
-
-		const lenisWrapper = document.querySelector(
-			"#lenis-wrapper"
-		) as HTMLDivElement;
-		const lenisContent = document.querySelector(
-			"#lenis-content"
-		) as HTMLDivElement;
-
-		const lenis = new Lenis({
-			wrapper: lenisWrapper,
-			content: lenisContent,
-			autoRaf: true,
-		});
-
-		// lenis.on("scroll", ScrollTrigger.update);
-
-		// gsap.ticker.add((time) => {
-		//   lenis.raf(time * 1000);
-		// });
-		// gsap.ticker.lagSmoothing(0);
-	</script>
 </html>
