@@ -1,5 +1,6 @@
 ---
 import ASCIIBackground from "../misc/ASCIIBackground.astro";
+import IconScatter from "../misc/IconScatter.astro";
 import Puzzle from "../misc/Puzzle.astro";
 import type { WitnessPalette, WitnessConfig } from "../misc/PuzzleClient";
 import Navbar from "../navigation/Navbar.astro";
@@ -84,37 +85,37 @@ const kMyConfig: WitnessConfig = {
 ---
 
 <main class="h-full flex flex-col items-center justify-center">
-    <!-- <div class="md:block hidden -z-10">
+	<!-- <div class="md:block hidden -z-10">
         <ASCIIBackground/>
     </div> -->
 	<div class="font-bold absolute bottom-5 left-5 font-caslon opacity-0" id="landing-title">
 		<span class="text-stone-300 text-6xl md:text-9xl">Hayden Rivas</span>
-			<br /> 
-		<span class="text-stone-500 text-5xl md:text-8xl">is building <span class="text-stone-600">software</span></span>
-    </div>
-    <Projects/>
+		<br />
+		<span class="text-stone-500 text-5xl md:text-8xl"
+			>is building <span class="text-stone-600">software</span></span
+		>
+	</div>
 </main>
 
 <script>
-    import { gsap } from "gsap";
-    const tl = gsap.timeline();
-    // be careful with event listeners, use sparingly
-    window.addEventListener("intro:done", runOnLanding);
+	import { gsap } from "gsap";
+	const tl = gsap.timeline();
+	// be careful with event listeners, use sparingly
+	window.addEventListener("intro:done", runOnLanding);
 
-    function runOnLanding() {
-        tl.fromTo(
-            "#landing-title",
-            {
-                y: 20,
-            },
-            {
-                opacity: 1,
-                y: 0,
-                duration: 0.5,
-                ease: "circ.out",
-                delay: 0.5,
-            },
-        );
-    }
-
+	function runOnLanding() {
+		tl.fromTo(
+			"#landing-title",
+			{
+				y: 20,
+			},
+			{
+				opacity: 1,
+				y: 0,
+				duration: 0.5,
+				ease: "circ.out",
+				delay: 0.5,
+			},
+		);
+	}
 </script>

@@ -1,0 +1,325 @@
+---
+interface Props {
+	/** Characters ("X", "✦") or Iconify IDs ("mdi:close-thick") — mixed ok */
+	icons: string | string[];
+	/** Grid cell size in px */
+	cellSize?: number;
+	/** Image to map onto the grid — brightness/color drives cell appearance */
+	image?: ImageMetadata | string;
+	/** Use image pixel colors on cells (true) or just brightness→opacity (false) */
+	useImageColors?: boolean;
+	/** Base color(s) when no image, or fallback */
+	colors?: string | string[];
+	/** Base opacity for all cells (image overrides per-cell) */
+	opacity?: number;
+	/** Built-in animation preset */
+	animation?: "none" | "wave" | "ripple" | "rain" | "breathe" | "cascade";
+	/** Animation speed multiplier (higher = faster) */
+	animationSpeed?: number;
+	/** Smooth easing between states (true) or instant snap transitions (false) */
+	smooth?: boolean;
+	/** Gap between cells in px */
+	gap?: number;
+	class?: string;
+	id?: string;
+}
+
+const {
+	icons,
+	cellSize = 16,
+	image,
+	useImageColors = true,
+	colors,
+	opacity = 1,
+	animation = "none",
+	animationSpeed = 1,
+	smooth = false,
+	gap = 0,
+	class: className,
+	id,
+} = Astro.props;
+
+const iconsArr = Array.isArray(icons) ? icons : [icons];
+const colorsArr = colors ? (Array.isArray(colors) ? colors : [colors]) : null;
+const imageSrc = typeof image === "string" ? image : image?.src ?? "";
+---
+
+<div
+	id={id}
+	class:list={["ascii-grid", className]}
+	data-cell-size={cellSize}
+	data-icons={JSON.stringify(iconsArr)}
+	data-colors={colorsArr ? JSON.stringify(colorsArr) : ""}
+	data-image={imageSrc}
+	data-use-image-colors={useImageColors}
+	data-opacity={opacity}
+	data-animation={animation}
+	data-animation-speed={animationSpeed}
+	data-smooth={smooth}
+	data-gap={gap}
+	aria-hidden="true"
+></div>
+
+<script>
+	interface CellData {
+		el: HTMLElement;
+		col: number;
+		row: number;
+		baseOpacity: number;
+	}
+
+	function initAsciiGrid(wrapper: HTMLElement) {
+		const cellSize = Number(wrapper.dataset.cellSize);
+		const icons: string[] = JSON.parse(wrapper.dataset.icons!);
+		const colorsRaw = wrapper.dataset.colors;
+		const colors: string[] | null = colorsRaw ? JSON.parse(colorsRaw) : null;
+		const imageSrc = wrapper.dataset.image || null;
+		const useImageColors = wrapper.dataset.useImageColors === "true";
+		const baseOpacity = Number(wrapper.dataset.opacity ?? 1);
+		const animation = wrapper.dataset.animation || "none";
+		const speed = Number(wrapper.dataset.animationSpeed) || 1;
+		const smooth = wrapper.dataset.smooth === "true";
+		const gap = Number(wrapper.dataset.gap) || 0;
+
+		const w = wrapper.clientWidth;
+		const h = wrapper.clientHeight;
+		if (!w || !h) return;
+
+		const allText = icons.every((i: string) => !i.includes(":"));
+
+		wrapper.style.display = "grid";
+		wrapper.style.overflow = "hidden";
+		wrapper.style.gap = `${gap}px`;
+
+		let cols: number, rows: number;
+
+		if (allText) {
+			wrapper.style.fontFamily = "monospace";
+			wrapper.style.fontSize = `${cellSize}px`;
+			wrapper.style.lineHeight = "1";
+			// Measure actual glyph bounds via canvas
+			const ctx = document.createElement("canvas").getContext("2d")!;
+			ctx.font = `${cellSize}px monospace`;
+			const m = ctx.measureText(icons[0]);
+			const chW = m.width || cellSize * 0.6;
+			const glyphH = Math.ceil(m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) || cellSize;
+			cols = Math.floor(w / (chW + gap)) || 1;
+			rows = Math.floor(h / (glyphH + gap)) || 1;
+			wrapper.style.gridTemplateColumns = `repeat(${cols}, ${chW}px)`;
+			wrapper.style.gridTemplateRows = `repeat(${rows}, ${glyphH}px)`;
+			wrapper.style.alignItems = "start";
+		} else {
+			cols = Math.floor(w / (cellSize + gap)) || 1;
+			rows = Math.floor(h / (cellSize + gap)) || 1;
+			wrapper.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+			wrapper.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
+		}
+
+		const frag = document.createDocumentFragment();
+		const cells: CellData[] = [];
+
+		for (let r = 0; r < rows; r++) {
+			for (let c = 0; c < cols; c++) {
+				const icon = icons[Math.floor(Math.random() * icons.length)];
+				const isIcon = icon.includes(":");
+				let el: HTMLElement;
+
+				if (isIcon) {
+					el = document.createElement("iconify-icon");
+					el.setAttribute("icon", icon);
+					el.setAttribute("height", String(cellSize));
+					el.style.width = `${cellSize}px`;
+					el.style.height = `${cellSize}px`;
+					el.style.display = "grid";
+					el.style.placeItems = "center";
+				} else {
+					el = document.createElement("span");
+					el.textContent = icon;
+					el.style.display = "block";
+					el.style.textAlign = "center";
+					el.style.lineHeight = "1";
+					el.style.overflow = "hidden";
+				}
+				el.style.userSelect = "none";
+				el.style.opacity = animation !== "none" ? "0" : String(baseOpacity);
+				el.style.willChange = "opacity, transform";
+
+				if (colors && !imageSrc) {
+					el.style.color = colors[Math.floor(Math.random() * colors.length)];
+				}
+
+				frag.appendChild(el);
+				cells.push({ el, col: c, row: r, baseOpacity });
+			}
+		}
+
+		wrapper.appendChild(frag);
+
+		if (imageSrc) {
+			loadImage(imageSrc, cells, cols, rows, useImageColors, colors).then(() => {
+				applyAnimation(cells, cols, rows, animation, speed, smooth);
+			});
+		} else {
+			applyAnimation(cells, cols, rows, animation, speed, smooth);
+		}
+	}
+
+	async function loadImage(
+		src: string,
+		cells: CellData[],
+		cols: number,
+		rows: number,
+		useColors: boolean,
+		fallbackColors: string[] | null,
+	) {
+		return new Promise<void>((resolve) => {
+			const img = new Image();
+			img.crossOrigin = "anonymous";
+			img.onload = () => {
+				const canvas = document.createElement("canvas");
+				canvas.width = cols;
+				canvas.height = rows;
+				const ctx = canvas.getContext("2d")!;
+				ctx.drawImage(img, 0, 0, cols, rows);
+				const px = ctx.getImageData(0, 0, cols, rows).data;
+
+				for (let i = 0; i < cells.length; i++) {
+					const off = i * 4;
+					const r = px[off],
+						g = px[off + 1],
+						b = px[off + 2],
+						a = px[off + 3] / 255;
+					const brightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+					const cellOpacity = +(brightness * a).toFixed(3);
+
+					cells[i].baseOpacity = cellOpacity;
+					cells[i].el.style.opacity = String(cellOpacity);
+
+					if (useColors && a > 0.01) {
+						cells[i].el.style.color = `rgb(${r},${g},${b})`;
+					} else if (fallbackColors) {
+						cells[i].el.style.color =
+							fallbackColors[Math.floor(Math.random() * fallbackColors.length)];
+					}
+				}
+				resolve();
+			};
+			img.onerror = () => resolve();
+			img.src = src;
+		});
+	}
+
+	function applyAnimation(
+		cells: CellData[],
+		cols: number,
+		rows: number,
+		animation: string,
+		speed: number,
+		smooth: boolean,
+	) {
+		if (animation === "none") return;
+
+		const dur = 2 / speed;
+		const ease = smooth ? "ease-in-out" : "step-start";
+		const cx = cols / 2;
+		const cy = rows / 2;
+
+		for (const cell of cells) {
+			const { el, col, row, baseOpacity } = cell;
+			let delay: number;
+
+			el.style.setProperty("--base-o", String(baseOpacity));
+
+			const dir = smooth ? "alternate" : "normal";
+			const name = smooth ? animation : animation + "-snap";
+			const anim = (d: number, t: number, dl: number) =>
+				`ascii-${name} ${t}s ${ease} ${dl}s infinite ${dir}`;
+
+			switch (animation) {
+				case "wave":
+					delay = (col + row) * 0.05 / speed;
+					el.style.animation = anim(dur, dur, delay);
+					break;
+
+				case "ripple":
+					delay = Math.sqrt((col - cx) ** 2 + (row - cy) ** 2) * 0.08 / speed;
+					el.style.animation = anim(dur, dur, delay);
+					break;
+
+				case "rain":
+					delay = Math.random() * dur * 2;
+					el.style.animation = anim(dur, dur * 2, delay);
+					break;
+
+				case "breathe":
+					delay = (Math.sin(col * 0.4) + Math.cos(row * 0.4)) * 0.6 / speed;
+					el.style.animation = anim(dur, dur * 2.5, delay);
+					break;
+
+				case "cascade":
+					delay = row * 0.04 / speed;
+					el.style.animation = anim(dur, dur, delay);
+					break;
+			}
+		}
+	}
+
+	function initAll() {
+		document.querySelectorAll<HTMLElement>(".ascii-grid:not([data-init])").forEach((el) => {
+			el.dataset.init = "1";
+			initAsciiGrid(el);
+		});
+	}
+	initAll();
+	document.addEventListener("astro:page-load", initAll);
+</script>
+
+<style is:global>
+	/* ── Smooth variants (used with alternate) ── */
+	@keyframes ascii-wave {
+		from { opacity: 0; transform: scale(0.7); }
+		to   { opacity: 1; transform: scale(1); }
+	}
+	@keyframes ascii-ripple {
+		from { opacity: 0; transform: scale(0.5); }
+		to   { opacity: 1; transform: scale(1.05); }
+	}
+	@keyframes ascii-rain {
+		0%, 100% { opacity: 0; transform: scale(0.4); }
+		40%, 60% { opacity: 1; transform: scale(1.1); }
+	}
+	@keyframes ascii-breathe {
+		from { opacity: 0; }
+		to   { opacity: 1; }
+	}
+	@keyframes ascii-cascade {
+		from { opacity: 0; transform: translateY(-40%); }
+		to   { opacity: 1; transform: translateY(0); }
+	}
+
+	/* ── Snap variants (binary on/off, no alternate needed) ── */
+	@keyframes ascii-wave-snap {
+		0%   { opacity: 0; }
+		50%  { opacity: 1; }
+		100% { opacity: 0; }
+	}
+	@keyframes ascii-ripple-snap {
+		0%   { opacity: 0; }
+		50%  { opacity: 1; }
+		100% { opacity: 0; }
+	}
+	@keyframes ascii-rain-snap {
+		0%, 100% { opacity: 0; }
+		40%, 60% { opacity: 1; }
+	}
+	@keyframes ascii-breathe-snap {
+		0%   { opacity: 0; }
+		50%  { opacity: 1; }
+		100% { opacity: 0; }
+	}
+	@keyframes ascii-cascade-snap {
+		0%   { opacity: 0; }
+		50%  { opacity: 1; }
+		100% { opacity: 0; }
+	}
+</style>

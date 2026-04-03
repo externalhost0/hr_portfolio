@@ -65,7 +65,6 @@ body {
     font-display: swap;
 }
 
-
 iconify-icon {
     display: inline-block;
 }
@@ -95,6 +94,32 @@ iconify-icon {
 }
 .slow-hue-rotate-opp {
     animation: hue-rotate 6s linear 1s infinite reverse;
+}
+
+@keyframes float-orbit {
+    0%      { transform: translate( 8.00px,  0.00px); }
+    6.25%   { transform: translate( 7.39px, -3.06px); }
+    12.5%   { transform: translate( 5.66px, -5.66px); }
+    18.75%  { transform: translate( 3.06px, -7.39px); }
+    25%     { transform: translate( 0.00px, -8.00px); }
+    31.25%  { transform: translate(-3.06px, -7.39px); }
+    37.5%   { transform: translate(-5.66px, -5.66px); }
+    43.75%  { transform: translate(-7.39px, -3.06px); }
+    50%     { transform: translate(-8.00px,  0.00px); }
+    56.25%  { transform: translate(-7.39px,  3.06px); }
+    62.5%   { transform: translate(-5.66px,  5.66px); }
+    68.75%  { transform: translate(-3.06px,  7.39px); }
+    75%     { transform: translate( 0.00px,  8.00px); }
+    81.25%  { transform: translate( 3.06px,  7.39px); }
+    87.5%   { transform: translate( 5.66px,  5.66px); }
+    93.75%  { transform: translate( 7.39px,  3.06px); }
+    100%    { transform: translate( 8.00px,  0.00px); }
+}
+.float-orbit {
+    animation: float-orbit 5s linear infinite;
+}
+.float-orbit-fast {
+    animation: float-orbit 2.5s linear infinite;
 }
 
 @keyframes brand-cycle {
