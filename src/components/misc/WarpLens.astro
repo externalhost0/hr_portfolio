@@ -1,0 +1,104 @@
+---
+interface Props {
+  focalLength?: number;
+  class?: string;
+}
+
+const {
+  focalLength = 300,
+  class: className
+} = Astro.props;
+---
+
+<div
+  class:list={["lens-container", className]}
+  data-focal={focalLength}
+>
+  <div class="lens-content" data-warp-target>
+    <slot />
+  </div>
+</div>
+
+<style>
+  .lens-container {
+    perspective: calc(var(--focal, 300) * 1px);
+    perspective-origin: center;
+    display: inline-block;
+    padding: 2rem;
+  }
+
+  .lens-content {
+    display: flex;
+    transform-style: preserve-3d;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* We use :global because the spans are injected via JS */
+  .lens-content :global(.char) {
+    display: inline-block;
+    transform-style: preserve-3d;
+    white-space: pre;
+    backface-visibility: hidden;
+    transition: transform 0.3s ease;
+  }
+</style>
+
+<script>
+  function initWarpLens(container: HTMLElement) {
+    const target = container.querySelector<HTMLElement>('[data-warp-target]');
+    if (!target) return;
+
+    const focal = Number(container.dataset.focal);
+    container.style.setProperty('--focal', String(focal));
+
+    // Derive all distortion from focal length — lower = more fisheye
+    const intensity = 10000 / focal;
+    const bulge = intensity * 2.5;
+    const wrap = intensity;
+    const stretchFactor = intensity * 0.008;
+
+    const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT);
+    const textNodes: Node[] = [];
+    let node: Node | null;
+    while ((node = walker.nextNode())) textNodes.push(node);
+
+    textNodes.forEach(textNode => {
+      const text = textNode.textContent;
+      if (!text) return;
+      const parent = textNode.parentNode;
+      if (!parent) return;
+
+      const fragment = document.createDocumentFragment();
+      for (const char of text) {
+        const span = document.createElement('span');
+        span.classList.add('char');
+        span.innerText = char;
+        fragment.appendChild(span);
+      }
+      parent.replaceChild(fragment, textNode);
+    });
+
+    const allChars = target.querySelectorAll<HTMLElement>('.char');
+    const middle = (allChars.length - 1) / 2;
+
+    allChars.forEach((char, i) => {
+      const offset = middle === 0 ? 0 : (i - middle) / middle;
+      const rotation = -(offset * wrap);
+      const zDepth = offset ** 2 * bulge;
+      const stretch = 1 + Math.abs(offset) * stretchFactor;
+
+      char.style.transform = `translateZ(${zDepth}px) rotateY(${rotation}deg) scale(${stretch})`;
+    });
+  }
+
+  function initAll() {
+    document.querySelectorAll<HTMLElement>('.lens-container:not([data-init])').forEach(el => {
+      el.dataset.init = '1';
+      initWarpLens(el);
+    });
+  }
+
+  initAll();
+  document.addEventListener('astro:page-load', initAll);
+</script>

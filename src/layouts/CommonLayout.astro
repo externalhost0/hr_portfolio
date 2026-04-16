@@ -1,30 +1,31 @@
 ---
 import "../styles/global.css";
-// Supports weights 100-900
-import "@fontsource-variable/public-sans";
-// for lenis css
 import "lenis/dist/lenis.css";
+import Navbar from "../components/navigation/Navbar.astro";
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Hayden Rivas</title>
-        <link rel="preload" href="./src/assets/fonts/04b_03b.woff2" as="font" type="font/woff2" crossorigin />
+		<script is:inline>
+			var hues = [0, 22, 60, 120, 300];
+			var hue = hues[Math.floor(Math.random() * hues.length)];
+			var invert = "invert(1) ";
+			document.documentElement.style.setProperty("--liquid-hue", hue + "deg");
+			document.documentElement.style.setProperty("--liquid-filter", invert + "hue-rotate(" + hue + "deg)");
+		</script>
 	</head>
 	<body>
-		<div id="background-frame" class="fixed inset-0 bg-brand-light -z-10"></div>
-        <slot name="before-inset"/>
-        <!-- before switching to a scrollless site, this had overflow-y-scroll -->
-		<div
-			id="wrapper"
-			class="fixed inset-5 overflow-hidden bg-transparent border border-black"
-		>
+		<header class="fixed top-0 left-0 right-0 z-50 w-full">
+			<Navbar />
+		</header>
+		<main class="min-h-screen pt-16 flex flex-col items-center justify-center">
 			<slot />
-		</div>
+		</main>
 	</body>
 </html>

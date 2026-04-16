@@ -1,63 +1,212 @@
 ---
 import Landing from "../components/slides/Landing.astro";
 import CommonLayout from "../layouts/CommonLayout.astro";
-import Intro from "../components/slides/Intro.astro";
+import Main from "../components/Main.astro";
 import "iconify-icon";
-import Navbar from "../components/navigation/Navbar.astro";
+import IntroMotionGraphcis from "../components/IntroMG";
+
+import fireoverlayVideo_webm from "../assets/videos/fireoverlay-optimized.webm";
+import fireoverlayVideo_mp4 from "../assets/videos/fireoverlay-optimized.mp4";
+
+import liquidVideo_webm from "../assets/videos/liquid1-optimized.webm";
+import liquidVideo_mp4 from "../assets/videos/liquid1-optimized.mp4";
+
+import cowsVideo_webm from "../assets/videos/cows-optimized.webm";
+import cowsVideo_mp4 from "../assets/videos/cows-optimized.mp4";
+
+import bloomVideo_webm from "../assets/videos/bloom-optimized.webm";
+import bloomVideo_mp4 from "../assets/videos/bloom-optimized.mp4";
+
+import bloom2Video_webm from "../assets/videos/bloom2-optimized.webm";
+import bloom2Video_mp4 from "../assets/videos/bloom2-optimized.mp4";
+
+import cowVideo_webm from "../assets/videos/cow-optimized.webm";
+import cowVideo_mp4 from "../assets/videos/cow-optimized.mp4";
+
+import birdVideo_webm from "../assets/videos/bird-optimized.webm";
+import birdVideo_mp4 from "../assets/videos/bird-optimized.mp4";
+
+import textureVideo_webm from "../assets/videos/texture-optimized.webm";
+import textureVideo_mp4 from "../assets/videos/texture-optimized.mp4";
+
+import lighttextureVideo_webm from "../assets/videos/texture-light-optimized.webm";
+import lighttextureVideo_mp4 from "../assets/videos/texture-light-optimized.mp4";
+
+import liquidDrop2Video_webm from "../assets/videos/liquiddrop2-optimized.webm";
+import liquidDrop2Video_mp4 from "../assets/videos/liquiddrop2-optimized.mp4";
+
+import DitheredVideo from "../components/misc/DitheredVideo";
 ---
 
 <CommonLayout>
-    <div slot="before-inset" id="intro-wrapper">
-        <Intro />
-    </div>
-    <script>
-        function removeIntro() {
-            const wrapper = document.getElementById("intro-wrapper");
-            wrapper?.remove();
-            window.removeEventListener("intro:done", removeIntro);
-        }
-        window.addEventListener("intro:done", removeIntro);
-    </script>
-	<!-- some stuff we have outside the frame for fun -->
-	<!-- <div class="-top-0.5 left-5 fixed inline-flex items-center gap-1 group" slot="before-inset">
-		<div
-			class="w-0 overflow-hidden opacity-0 group-hover:opacity-100 group-hover:w-4 transition-all duration-200 ease-in-out flex items-center"
-		>
-			<iconify-icon
-				id="copy-icon"
-				icon="tabler:copy-filled"
-				height={15}
-				class="text-black/40 group-hover:text-blue-800/80 transition-colors duration-100"></iconify-icon>
-		</div>
-		<p
-			id="copy-email"
-			class="text-black select-none font-light underline decoration-black/50 group-hover:text-blue-800 group-hover:decoration-blue-800 active:scale-95 transition-all ease-in-out duration-200 cursor-pointer"
-		>
-			haydenr261@gmail.com
-		</p>
-	</div>
+	<!-- <DitheredVideo
+        class="animate-[huerotate_10s_linear_0s_infinite]"
+		client:only="solid-js"
+		webm={bloomVideo_webm}
+		mp4={bloomVideo_mp4}
+		playbackSpeed={1.5}
+        dpr={2}
+		dither={{
+			chars: "█▓▒░ ",
+			fontSizeRange: 7,
+			overlay: false,
+			color: "#f283c8",
+			bgColor: "transparent",
+			invert: true,
+			maskMode: "ramp",
+			colorRamp: ["#360806", "#a61712", "red", "#e66cb9", "pink", "white"],
+			trail: 0.05,
+		}}
+		style={{
+			position: "fixed",
+			left: `-10vw`,
+			bottom: `0`,
+			"pointer-events": "none",
+		}} -->
+	<!-- <DitheredVideo
+		client:only="solid-js"
+		webm={liquidVideo_webm}
+		mp4={liquidVideo_mp4}
+		dither={{ fontSizeRange: 5, overlay: true, color: "blue", invert: false }}
+		style={{
+			position: "fixed",
+			top: 0,
+			left: 0,
+			"pointer-events": "none",
+			"mix-blend-mode": "exclusion",
+		}}
+	/> -->
+	<!-- <DitheredVideo
+		client:only="solid-js"
+		webm={bloom2Video_webm}
+		mp4={bloom2Video_mp4}
+		playbackSpeed={2}
+		dither={{
+			chars: "█▓▒░ ",
+			fontSizeRange: 7,
+			overlay: false,
+			color: "#f283c8",
+			bgColor: "transparent",
+			invert: true,
+			curve: [0.19, 0.42, 0.96, 0.6],
+			// colorRamp: ['white', '#b8fbff', '#34c261', '#1538a1', "black"],
+			colorRamp: ["black", "#1538a1", "#34c261", "#b8fbff", "white"],
+			trail: 0.02,
+		}}
+		style={{
+			position: "fixed",
+			right: `10vw`,
+			bottom: `0`,
+			"pointer-events": "none",
+		}}
+	/> -->
 
+	<div id="fire-video" class="fixed inset-0 -z-10 mix-blend-lighten pointer-events-none opacity-95">
+		<video
+			class="h-full w-full object-cover"
+			onloadedmetadata="this.playbackRate = 0.7"
+			autoplay
+			muted
+			loop
+			playsinline
+		>
+			<source src={fireoverlayVideo_webm} type="video/webm" />
+			<source src={fireoverlayVideo_mp4} type="video/mp4" />
+		</video>
+	</div>
+    
+    <div id="liquid-video" class="opacity-0 fixed inset-0 -z-10 pointer-events-none" style="filter: var(--liquid-filter);">
+		<video
+            id="liquid-video-element"
+			class="h-full w-full object-cover"
+			muted
+			playsinline
+		>
+			<source src={liquidDrop2Video_webm} type="video/webm" />
+			<source src={liquidDrop2Video_mp4} type="video/mp4" />
+		</video>
+	</div>
+    <div id="color-back" class="opacity-0 w-full h-full fixed inset-0 -z-10 bg-[#eef110]" style="filter: var(--liquid-filter);"></div>
 	<script>
-		const el = document.getElementById("copy-email");
-		const icon = document.getElementById("copy-icon");
+		import gsap from "gsap";
 
-		el?.addEventListener("click", () => {
-			navigator.clipboard.writeText("haydenr261@gmail.com");
-			icon?.setAttribute("icon", "tabler:copy-check-filled");
-            icon?.classList.add("!text-emerald-300");
-			setTimeout(() => {
-				icon?.setAttribute("icon", "tabler:copy-filled");
-                icon?.classList.remove("!text-emerald-300");
-			}, 1500);
+        const liquidVid = document.getElementById("liquid-video-element") as HTMLVideoElement;
+
+		document.getElementById("learn-button")?.addEventListener("click", () => {
+			const tl = gsap.timeline();
+			tl.to("#fire-video", {
+				opacity: 0,
+				ease: "back.out",
+				duration: 1,
+			});
+			tl.to(
+				"#liquid-video",
+				{
+					opacity: 1,
+					ease: "back.in",
+					duration: 1,
+				},
+				"-0.2",
+			);
+            tl.add(() => {
+                if (liquidVid) {
+                    liquidVid.currentTime = 0;
+                    liquidVid.play();
+                }
+            }, 1);
+            tl.to("#color-back", {
+                opacity: 1,
+                duration: 1,
+            }, "+=2.2")
 		});
-	</script> -->
-	<p class="text-black font-light bottom-0 right-5 fixed" slot="before-inset">
-		© {new Date().getFullYear()}
-	</p>
-	<div class="fixed z-110 top-3.5 left-5 right-5 pointer-events-none">
-		<div class="pointer-events-auto">
-			<Navbar />
-		</div>
-	</div>
-	<Landing />
+	</script>
+	<!-- <div id="light-video" class="opacity-0 fixed inset-0 -z-10 mix-blend-lighten pointer-events-none">
+		<video
+			class="h-full w-full object-cover"
+			autoplay
+			muted
+			loop
+			playsinline
+		>
+			<source src={textureVideo_webm} type="video/webm" />
+			<source src={textureVideo_mp4} type="video/mp4" />
+		</video>
+	</div> -->
+
+	<!-- <DitheredVideo
+		client:only="solid-js"
+		webm={birdVideo_webm}
+		mp4={birdVideo_mp4}
+		dither={{
+			fontSizeRange: 16,
+			overlay: false,
+			invert: false,
+            colorRamp: ["black", "#3624d6", "blue", "cyan", "white"],
+			curve: [.7,-0.01,.29,.99],
+            trail: 0.1
+		}}
+		style={{
+			position: "fixed",
+			right: `17vw`,
+			top: `10vh`,
+			"pointer-events": "none",
+		}}
+	/> -->
+
+	<!-- <DitheredVideo
+		client:only="solid-js"
+		webm={cowVideo_webm}
+		mp4={cowVideo_mp4}
+		scale={0.5}
+		dither={{ fontSizeRange: 6, overlay: true, color: "blue", charMode: { threshold: 40 }, invert: false }}
+		style={{
+			position: "fixed",
+			left: `5vw`,
+			top: `10vh`,
+			"pointer-events": "none",
+			"z-index": 10,
+		}}
+	/> -->
+	<!-- <IntroMotionGraphcis client:only="solid-js" /> -->
+	<Main />
 </CommonLayout>
