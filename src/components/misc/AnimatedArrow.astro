@@ -1,0 +1,46 @@
+---
+
+---
+
+<style>
+	@keyframes bounce {
+		0%,
+		100% {
+			transform: translateY(0);
+			opacity: 0.55;
+		}
+		50% {
+			transform: translateY(6px);
+			opacity: 1;
+		}
+	}
+
+	.arrow-1 {
+		animation: bounce 2s ease-in-out infinite;
+	}
+	.arrow-2 {
+		animation: bounce 2s ease-in-out infinite 0.1s;
+	}
+</style>
+<div id="arrow" class="flex flex-col">
+	<iconify-icon class="text-white arrow-1" icon="pixelarticons:chevron-down" width="28" height="28"
+	></iconify-icon>
+	<iconify-icon class="text-white arrow-2" icon="pixelarticons:chevron-down" width="28" height="28"
+	></iconify-icon>
+	<script>
+		import gsap from "gsap";
+		import { ScrollTrigger } from "gsap/ScrollTrigger";
+		gsap.registerPlugin(ScrollTrigger);
+		gsap.to("#arrow", {
+			scrollTrigger: {
+				scroller: "#lenis-wrapper",
+				trigger: "#arrow",
+				start: "center 90%",
+				end: "+=200",
+				scrub: true,
+			},
+			opacity: 0,
+			ease: "none",
+		});
+	</script>
+</div>

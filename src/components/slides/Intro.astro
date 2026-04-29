@@ -1,201 +1,111 @@
----
-import { Image } from "astro:assets";
-import Tickerbar from "../misc/Tickerbar";
-import HoloImage from "../../assets/imgs/holo1.jpg";
-import IconScatter from "../misc/IconScatter.astro";
----
+<div id="overlay-top" class="z-100 fixed top-0 inset-x-0 hidden h-1/2 bg-neutral-900"></div>
+<div id="overlay-bottom" class="z-100 fixed bottom-0 inset-x-0 hidden h-1/2 bg-neutral-900"></div>
 
-<!-- inset will remove the before-inset need -->
-<div id="overlay-top" class="z-100 fixed top-0 inset-x-0 h-1/2 bg-black"></div>
-<div id="overlay-bottom" class="z-100 fixed bottom-0 inset-x-0 h-1/2 bg-black"></div>
-
-<!-- patterns fixed -->
-<div class="fixed z-150 top-1/2 left-5 w-90 h-60" id="iscatter1">
-	<IconScatter
-		icons="x"
-		cellSize={20}
-		gap={5}
-		colors={["#2e22b8", "#404bbe", "#677dd6", "#c7ccf7", "#ffffff"]}
-		animation="rain"
-		animationSpeed={5}
-		class="absolute inset-0"
-	/>
-</div>
-<div class="fixed z-150 top-1/4 right-5 w-90 h-60" id="iscatter1">
-	<IconScatter
-		icons="x"
-		cellSize={20}
-		gap={5}
-		colors={["#b86822", "#a740be", "#8fd187", "#f7c7c7", "#278888"]}
-		animation="wave"
-		animationSpeed={2}
-		class="absolute inset-0"
-	/>
-</div>
-
-<div id="ticker-bars" class="h-full z-110 w-screen fixed pt-6 pb-10 flex flex-col justify-between">
-	<div id="top-bar" class="bg-neutral-950 opacity-0 fix overflow-hidden z-110">
-		<Tickerbar id="top" client:only="solid-js" />
-		<div class="relative overflow-hidden">
-			<Image
-				src={HoloImage}
-				loading="eager"
-				alt="holotopimage"
-				class="w-full slow-hue-rotate h-6 object-cover"
-			/>
-			<div
-				id="top-img-reveal"
-				class="absolute inset-y-0 w-[200%] pointer-events-none bg-linear-to-l from-black from-50% to-transparent"
-				style="transform: translateX(-50%);"
-			>
-			</div>
-		</div>
-		<div
-			id="top-bar-wipe"
-			class="absolute inset-y-0 w-[200%] pointer-events-none bg-linear-to-r from-black from-50% to-transparent"
-			style="transform: translateX(-100%);"
-		>
-		</div>
-	</div>
-	<div class="flex flex-col justify-center w-full items-center">
-		<p class="text-white text-6xl md:text-9xl font-04b float-orbit-fast">Loading...</p>
-	</div>
-	<div id="bottom-bar" class="bg-neutral-950 opacity-0 overflow-hidden z-110">
-		<Tickerbar id="bottom" client:only="solid-js" />
-		<div class="relative overflow-hidden">
-			<Image
-				src={HoloImage}
-				loading="eager"
-				alt="holobottomimage"
-				class="w-full slow-hue-rotate-opp h-6 object-cover"
-			/>
-			<div
-				id="bottom-img-reveal"
-				class="absolute inset-y-0 w-[200%] pointer-events-none bg-linear-to-r from-black from-50% to-transparent"
-				style="transform: translateX(0%);"
-			>
-			</div>
-		</div>
-		<div
-			id="bottom-bar-wipe"
-			class="absolute inset-y-0 w-[200%] pointer-events-none bg-linear-to-l from-black from-50% to-transparent"
-			style="transform: translateX(100%);"
-		>
-		</div>
+<div id="loading-squares" class="fixed inset-0 z-101 hidden items-center justify-center pointer-events-none">
+	<div class="grid grid-cols-3 gap-1 w-fit">
+		<div class="w-2 h-2 opacity-0 bg-white" data-index="0"></div>
+		<div class="w-2 h-2 opacity-0 bg-white" data-index="1"></div>
+		<div class="w-2 h-2 opacity-0 bg-white" data-index="2"></div>
+		<div class="w-2 h-2 opacity-0 bg-white" data-index="3"></div>
+		<div class="w-2 h-2 opacity-0" data-index="center"></div>
+		<div class="w-2 h-2 opacity-0 bg-white" data-index="4"></div>
+		<div class="w-2 h-2 opacity-0 bg-white" data-index="5"></div>
+		<div class="w-2 h-2 opacity-0 bg-white" data-index="6"></div>
+		<div class="w-2 h-2 opacity-0 bg-white" data-index="7"></div>
 	</div>
 </div>
 
 <script>
 	import { gsap } from "gsap";
-	const kSkipIntro = false;
 
-	interface FlashOutOptions {
-		duration?: number;
-        delay?: number;
-		frames?: number[];
-		easeEach?: string;
-		position?: gsap.Position;
-	}
-	export function flashOut(
-		tl: gsap.core.Timeline,
-		target: gsap.TweenTarget,
-		options: FlashOutOptions = {},
-	): gsap.core.Timeline {
-		const {
-			duration = 0.35,
-            delay = 0,
-			frames = [1, 0, 1, 0, 1, 0, 0.7, 0],
-			easeEach = "power4.out",
-			position = "<",
-		} = options;
+	const INTRO_STORAGE_KEY = "hr-portfolio:intro-seen";
+	const LOADER_CYCLE_DURATION = 0.7;
+	const LOADER_TOTAL_DURATION = 1.5;
+	const LOADER_FADE_MULTIPLIER = 3;
+	const introElements = ["#overlay-top", "#overlay-bottom", "#loading-squares"];
 
-		return tl.to(
-			target,
-			{
-				duration,
-				keyframes: {
-					opacity: frames,
-					easeEach,
-				},
-                delay
-			},
-			position,
+	const finishIntro = () => {
+		window.dispatchEvent(new CustomEvent("intro:done"));
+	};
+
+	const hasSeenIntro = () => {
+		try {
+			return sessionStorage.getItem(INTRO_STORAGE_KEY) === "true";
+		} catch {
+			return false;
+		}
+	};
+
+	const storeIntroSeen = () => {
+		try {
+			sessionStorage.setItem(INTRO_STORAGE_KEY, "true");
+		} catch {
+			// Storage can be unavailable in restricted browser contexts.
+		}
+	};
+
+	if (hasSeenIntro()) {
+		document.querySelectorAll(introElements.join(",")).forEach((el) => {
+			el.remove();
+		});
+		finishIntro();
+	} else {
+		storeIntroSeen();
+
+		gsap.set(introElements, { display: "flex" });
+		gsap.set(["#overlay-top", "#overlay-bottom"], { display: "block" });
+
+		const timeline = gsap.timeline();
+
+		const squareSelectors = ["0", "1", "2", "4", "7", "6", "5", "3"];
+		const squareElements = squareSelectors.map((idx) =>
+			document.querySelector(`#loading-squares [data-index="${idx}"]`),
 		);
-	}
 
-	function runSetupLoading() {
-		const timeline = gsap.timeline();
-		timeline.set("#top-bar", { x: "-110vw", opacity: 1 });
-		timeline.set("#bottom-bar", { x: "110vw", opacity: 1 });
+		gsap.set(squareElements, { opacity: 0.05 });
 
-		timeline
-			.to("#top-bar", {
-				x: 0,
-				ease: "power2.out",
-				delay: 0.4,
-			})
-			.to(
-				"#bottom-bar",
-				{
-					x: 0,
-					ease: "power2.out",
-				},
-				"<",
-			)
-			.to("#top-img-reveal", { x: "100%", duration: 0.5, ease: "power2.in", delay: 0.05 })
-			.to("#bottom-img-reveal", { x: "-100%", duration: 0.5, ease: "power2.in" }, "<");
-		return timeline;
-	}
-	function runCompleteLoading() {
-		const timeline = gsap.timeline();
-		const kLoadingPeriod: number = 1;
+		const stepDuration = LOADER_CYCLE_DURATION / 8;
+		const rotationTl = gsap.timeline();
 
-		timeline
-			// .to(["#overlay-top", "#overlay-bottom"], {
-			// 	backgroundColor: "#000000",
-			// 	duration: 1.2,
-			// 	delay: 0.3,
-			// 	ease: "power2.inOut",
-			// })
-			.to("#top-track-content", {
-				duration: 0.35,
-				keyframes: {
-					opacity: [1, 0, 1, 0, 1, 0, 0.7, 0],
-					easeEach: "power4.out",
-				},
-				delay: kLoadingPeriod,
-			})
-			.to(
-				"#bottom-track-content",
-				{
-					duration: 0.35,
-					keyframes: {
-						opacity: [1, 0, 1, 0, 1, 0, 0.7, 0],
-						easeEach: "power4.out",
+		const numCycles = Math.ceil(LOADER_TOTAL_DURATION / LOADER_CYCLE_DURATION) + 1;
+
+		for (let cycle = 0; cycle < numCycles; cycle++) {
+			const cycleStartTime = cycle * LOADER_CYCLE_DURATION;
+			const isLastCycle = cycle === numCycles - 1;
+
+			squareElements.forEach((el, i) => {
+				rotationTl.to(
+					el,
+					{
+						opacity: 1,
+						duration: stepDuration * 0.15,
+						ease: "power2.out",
 					},
-				},
-				"<",
-			)
-			.to("#top-bar-wipe", {
-				x: "0%",
-				duration: 0.6,
-				ease: "power2.in",
-				delay: 0.1,
-			})
-			.to(
-				"#bottom-bar-wipe",
-				{
-					x: "-50%",
-					duration: 0.6,
-					ease: "power2.in",
-				},
-				"<",
-			)
-			.to("#ticker-bars", {
+					cycleStartTime + i * stepDuration,
+				);
+
+				const naturalFadeDuration = stepDuration * LOADER_FADE_MULTIPLIER;
+				const fadeDuration = isLastCycle
+					? Math.min(naturalFadeDuration, (7.95 - i) * stepDuration)
+					: naturalFadeDuration;
+
+				rotationTl.to(
+					el,
+					{
+						opacity: 0.05,
+						duration: fadeDuration,
+						ease: "power2.in",
+					},
+					cycleStartTime + i * stepDuration + stepDuration * 0.05,
+				);
+			});
+		}
+
+		timeline
+			.to("#loading-squares", {
 				opacity: 0,
-				duration: 0.6,
-				ease: "power2.out",
-				delay: 0.1,
+				duration: 0.4,
+				delay: LOADER_TOTAL_DURATION,
 			})
 			.to(
 				"#overlay-top",
@@ -204,7 +114,7 @@ import IconScatter from "../misc/IconScatter.astro";
 					duration: 0.7,
 					ease: "power3.inOut",
 				},
-				"-=0.2",
+				"<",
 			)
 			.to(
 				"#overlay-bottom",
@@ -214,38 +124,13 @@ import IconScatter from "../misc/IconScatter.astro";
 					ease: "power3.inOut",
 				},
 				"<",
-			);
-		flashOut(timeline, "#iscatter1");
-
-		timeline
-			.set("#ticker-bars", { display: "none" })
-			.set(["#overlay-top", "#overlay-bottom"], { display: "none" })
-			.set("#iscatter1", { display: "none" })
+			)
 			.call(() => {
-				window.dispatchEvent(new CustomEvent("intro:done"));
+				rotationTl.kill();
+			})
+			.set(introElements, { display: "none" })
+			.call(() => {
+				finishIntro();
 			});
-
-		return timeline;
-	}
-	if (!kSkipIntro) {
-		const readyIds = new Set();
-		window.addEventListener("ticker:ready", onTickerReady);
-		const tl = gsap.timeline();
-
-		function onTickerReady(e: any) {
-			if (!e.detail?.id) return;
-			readyIds.add(e.detail.id);
-			if (readyIds.has("top") && readyIds.has("bottom")) {
-				tl.add(runCompleteLoading());
-			}
-		}
-
-		tl.add(runSetupLoading());
-	} else {
-		gsap.set("#ticker-bars", { display: "none" });
-		gsap.set(["#overlay-top", "#overlay-bottom"], { display: "none" });
-		setTimeout(() => {
-			window.dispatchEvent(new CustomEvent("intro:done"));
-		}, 100);
 	}
 </script>

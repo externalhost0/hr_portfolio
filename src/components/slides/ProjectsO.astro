@@ -1,0 +1,52 @@
+---
+import Project from "../misc/Project.astro";
+import pmcImage from "../../assets/imgs/pmc_r.png";
+import tsplaycoreImage from "../../assets/imgs/tsplaycore_r.png";
+import mythrilImage from "../../assets/imgs/mythril_r.png";
+import spottyImage from "../../assets/imgs/spotty_r.png";
+---
+
+<div class="flex items-center justify-center h-screen p-4 bg-neutral-300">
+    <div class="flex flex-col gap-15 items-center justify-center">
+
+    <h2 class="text-6xl font-bold">Selected Projects</h2>
+	<div class="flex flex-row gap-4 w-full">
+		<Project
+			title="ts-play-core"
+			about="NPM Package for ASCII animations (Used on this website!)"
+			imagePath={tsplaycoreImage}
+			href="https://github.com/externalhost0/ts-play-core"
+		>
+			<iconify-icon title="Typescript" icon="devicon:typescript" height={20}></iconify-icon>
+		</Project>
+		<Project
+			title="spotty.nvim"
+			about="Neovim plugin for displaying Spotify information inside Lualine"
+			imagePath={spottyImage}
+			href="https://github.com/externalhost0/spotty.nvim"
+		>
+			<iconify-icon title="Lua" icon="material-icon-theme:lua" height={20}></iconify-icon>
+		</Project>
+		<Project
+			title="Mythril Framework"
+			about="C++20 Vulkan rendering library for Windows, Linux, and MacOS"
+			imagePath={mythrilImage}
+			href="https://github.com/externalhost0/Mythril"
+		>
+			<iconify-icon title="CMake" icon="devicon:cmake" height={20}></iconify-icon>
+			<iconify-icon title="C++" icon="skill-icons:cpp" height={20}></iconify-icon>
+			<iconify-icon title="Vulkan" icon="logos:vulkan" height={20}></iconify-icon>
+		</Project>
+		<Project
+			title="Pimp My Canvas"
+			about="Chrome Extension that allows customization of the CanvasLMS"
+			imagePath={pmcImage}
+			href="https://chromewebstore.google.com/detail/bgpoafmllopbhciofdpjfeoaadfhhhnd?utm_source=item-share-cb"
+		>
+			<iconify-icon title="jQuery" icon="devicon:jquery" height={20}></iconify-icon>
+			<iconify-icon title="TailwindCSS" icon="devicon:tailwindcss" height={20}></iconify-icon>
+			<iconify-icon title="Javascript" icon="logos:javascript" height={20}></iconify-icon>
+		</Project>
+	</div>
+        </div>
+</div>

@@ -1,7 +1,8 @@
 ---
+import { ClientRouter } from "astro:transitions";
+import Navbar from "../components/navigation/Navbar.astro";
 import "../styles/global.css";
 import "lenis/dist/lenis.css";
-import Navbar from "../components/navigation/Navbar.astro";
 ---
 
 <!doctype html>
@@ -12,20 +13,252 @@ import Navbar from "../components/navigation/Navbar.astro";
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Hayden Rivas</title>
-		<script is:inline>
-			var hues = [0, 22, 60, 120, 300];
-			var hue = hues[Math.floor(Math.random() * hues.length)];
-			var invert = "invert(1) ";
-			document.documentElement.style.setProperty("--liquid-hue", hue + "deg");
-			document.documentElement.style.setProperty("--liquid-filter", invert + "hue-rotate(" + hue + "deg)");
-		</script>
+		<ClientRouter />
 	</head>
 	<body>
-		<header class="fixed top-0 left-0 right-0 z-50 w-full">
-			<Navbar />
-		</header>
-		<main class="min-h-screen pt-16 flex flex-col items-center justify-center">
-			<slot />
-		</main>
+		<div id="cursor-follower" transition:persist aria-hidden="true">
+			<div id="cursor-follower-dot"></div>
+		</div>
+		<div id="cursor-follower-label" transition:persist aria-hidden="true"></div>
+		<script is:inline>
+			(() => {
+				if (window.__hrCursorFollowerInit) return;
+				window.__hrCursorFollowerInit = true;
+
+				const el = document.getElementById("cursor-follower");
+				if (!el) return;
+				const dot = el.querySelector("#cursor-follower-dot");
+				if (!dot) return;
+				const label = document.getElementById("cursor-follower-label");
+
+				const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+				const noPointer = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+				if (reducedMotion || noPointer) {
+					el.remove();
+					label?.remove();
+					return;
+				}
+
+				let targetX = -9999;
+				let targetY = -9999;
+				let currentX = targetX;
+				let currentY = targetY;
+				let visible = false;
+				let hoverTarget = null;
+
+				const HIDDEN_CLASS = "cursor-follower--hidden";
+				const HOVER_CLASS = "cursor-follower--hover";
+				el.classList.add(HIDDEN_CLASS);
+
+				const readEase = () => {
+					const raw = getComputedStyle(document.documentElement)
+						.getPropertyValue("--cursor-follower-ease")
+						.trim();
+					const parsed = Number.parseFloat(raw);
+					if (!Number.isFinite(parsed)) return 0.18;
+					return Math.max(0.02, Math.min(1, parsed));
+				};
+
+				const closestHoverTarget = (node) => {
+					if (!(node instanceof Element)) return null;
+					return node.closest(
+						"a, button, .follower, [data-cursor='grow'], .follower-lg, [data-cursor='follower-lg'], .follower-xl, [data-cursor='follower-xl'], .label-hover",
+					);
+				};
+
+				const getCursorText = (target) => {
+					if (!target) return "";
+					if (target.matches(".label-hover")) return target.getAttribute("aria-label") || "";
+					return "";
+				};
+
+				const getScaleType = (target) => {
+					if (!target) return null;
+					if (target.matches(".follower-xl, [data-cursor='follower-xl']")) return "xl";
+					if (target.matches(".follower-lg, [data-cursor='follower-lg']")) return "lg";
+					return null;
+				};
+
+				const setHoverTarget = (next) => {
+					if (next === hoverTarget) return;
+					hoverTarget = next;
+					const scaleType = getScaleType(next);
+					const cursorText = getCursorText(next);
+					el.classList.toggle(HOVER_CLASS, Boolean(hoverTarget) && !scaleType);
+					el.classList.toggle("cursor-follower--hover-lg", Boolean(hoverTarget) && scaleType === "lg");
+					el.classList.toggle("cursor-follower--hover-xl", Boolean(hoverTarget) && scaleType === "xl");
+					label?.classList.toggle("cursor-follower-label--visible", Boolean(cursorText));
+					if (label) label.textContent = cursorText;
+				};
+
+				const showAt = (x, y) => {
+					targetX = x;
+					targetY = y;
+					currentX = x;
+					currentY = y;
+					if (!visible) {
+						visible = true;
+						el.classList.remove(HIDDEN_CLASS);
+					}
+				};
+
+				const updateTarget = (event) => {
+					if (!visible) {
+						showAt(event.clientX, event.clientY);
+						return;
+					}
+					targetX = event.clientX;
+					targetY = event.clientY;
+				};
+
+				const hide = () => {
+					if (!visible) return;
+					visible = false;
+					setHoverTarget(null);
+					el.classList.add(HIDDEN_CLASS);
+					label?.classList.remove("cursor-follower-label--visible");
+				};
+
+				window.addEventListener("pointermove", updateTarget, { passive: true });
+				window.addEventListener("pointerdown", updateTarget, { passive: true });
+				document.addEventListener(
+					"mouseout",
+					(event) => {
+						if (event.relatedTarget == null) hide();
+					},
+					{ passive: true },
+				);
+				window.addEventListener("blur", hide, { passive: true });
+
+				document.addEventListener(
+					"pointerover",
+					(event) => {
+						const next = closestHoverTarget(event.target);
+						if (next) setHoverTarget(next);
+					},
+					{ passive: true },
+				);
+
+				document.addEventListener(
+					"pointerout",
+					(event) => {
+						if (!hoverTarget) return;
+						if (event.relatedTarget instanceof Node && hoverTarget.contains(event.relatedTarget)) return;
+						setHoverTarget(closestHoverTarget(event.relatedTarget));
+					},
+					{ passive: true },
+				);
+
+				document.addEventListener(
+					"focusin",
+					(event) => {
+						const next = closestHoverTarget(event.target);
+						if (next) setHoverTarget(next);
+					},
+					{ passive: true },
+				);
+
+				document.addEventListener(
+					"focusout",
+					(event) => {
+						if (!hoverTarget) return;
+						if (event.relatedTarget instanceof Node && hoverTarget.contains(event.relatedTarget)) return;
+						setHoverTarget(closestHoverTarget(event.relatedTarget));
+					},
+					{ passive: true },
+				);
+
+				let lastTime = null;
+				const tick = (timestamp) => {
+					const delta = lastTime === null ? 16.667 : Math.min(timestamp - lastTime, 100);
+					lastTime = timestamp;
+
+					const size = el.offsetWidth || 0;
+					const half = size / 2;
+					const alpha = readEase();
+					const frameAlpha = 1 - Math.pow(1 - alpha, delta / 16.667);
+
+					currentX += (targetX - currentX) * frameAlpha;
+					currentY += (targetY - currentY) * frameAlpha;
+
+					el.style.transform = `translate3d(${currentX - half}px, ${currentY - half}px, 0)`;
+					if (label) label.style.transform = `translate3d(${currentX + 21}px, ${currentY}px, 0) translateY(-50%)`;
+					requestAnimationFrame(tick);
+				};
+				requestAnimationFrame(tick);
+			})();
+		</script>
+		<div id="backdrop" transition:persist class="fixed inset-0 -z-10"></div>
+		<div id="lenis-wrapper" class="fixed inset-0 border-2 rounded-lg border-white/0 overflow-y-scroll z-10">
+			<header transition:persist class="sticky top-0 left-0 right-0 z-50 w-full">
+				<Navbar />
+			</header>
+			<main id="lenis-content">
+				<slot />
+			</main>
+		</div>
+		<script>
+			import gsap from "gsap";
+			import { ScrollTrigger } from "gsap/ScrollTrigger";
+			import Lenis from "lenis";
+			gsap.registerPlugin(ScrollTrigger);
+
+			let lenis: Lenis | null = null;
+
+			function initLenis() {
+				if (lenis) return;
+				const lenisWrapper = document.querySelector("#lenis-wrapper") as HTMLElement;
+				const lenisContent = document.querySelector("#lenis-content") as HTMLElement;
+				lenis = new Lenis({ wrapper: lenisWrapper, content: lenisContent, autoRaf: true });
+				lenis.on("scroll", ScrollTrigger.update);
+				gsap.ticker.add((time) => { lenis!.raf(time * 1000); });
+				gsap.ticker.lagSmoothing(0);
+				ScrollTrigger.scrollerProxy("#lenis-wrapper", {
+					scrollTop(value?: number) {
+						if (arguments.length && value !== undefined) {
+							lenis!.scrollTo(value, { immediate: true });
+						}
+						return lenis!.scroll;
+					},
+					getBoundingClientRect() {
+						const lenisWrapper = document.querySelector("#lenis-wrapper") as HTMLElement;
+						return { top: 0, left: 0, width: lenisWrapper.clientWidth, height: lenisWrapper.clientHeight };
+					},
+				});
+			}
+
+			function registerBorderTrigger() {
+				ScrollTrigger.getById("border-trigger")?.kill();
+				gsap.to("#lenis-wrapper", {
+					scrollTrigger: {
+						id: "border-trigger",
+						scroller: "#lenis-wrapper",
+						trigger: "#nametitle",
+						start: "top top",
+						end: "+=300",
+						scrub: true,
+					},
+					inset: "1.25rem",
+					borderColor: "#ffffffff",
+					ease: "power3.out",
+				});
+			}
+
+			document.addEventListener("astro:before-swap", () => {
+				ScrollTrigger.getAll()
+					.filter(t => t.vars.id !== "border-trigger")
+					.forEach(t => t.kill());
+			});
+
+			document.addEventListener("astro:page-load", () => {
+				initLenis();
+				lenis?.scrollTo(0, { immediate: true });
+				ScrollTrigger.refresh();
+				registerBorderTrigger();
+			});
+
+			initLenis();
+			registerBorderTrigger();
+		</script>
 	</body>
 </html>

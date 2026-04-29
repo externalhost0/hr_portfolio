@@ -1,54 +1,174 @@
 ---
-import MyIcon from "../misc/MyIcon.astro";
-import PixelCover from "../misc/PixelCover.astro";
 import "iconify-icon";
 
 import Hamburger from "./Hamburger";
 import NavbarSection from "./NavbarSection.astro";
+import AudioToggle from "../misc/AudioToggle";
 const pathname = Astro.url.pathname;
 ---
 
-<div>
-	<div class="flex flex-row justify-between items-center px-4 py-3">
-		<div class="justify-self-start">
-			<MyIcon />
+<div class="grid grid-cols-3 items-center px-8 py-5 text-white bg-black">
+	<div class="justify-self-start flex flex-col gap-0">
+		<a href="/" class="justify-self-start font-medium text-wide">Hayden Rivas
+		<div
+			class="ascii-wave w-full h-2 overflow-hidden font-mono text-[10px] leading-none animated-brand-cycle whitespace-nowrap"
+			aria-hidden="true"
+		>
+			<style>
+				@keyframes brandcycle {
+					0% {
+						color: #f76611;
+					}
+					50% {
+						color: #f53c20;
+					}
+					100% {
+						color: #f76611;
+					}
+				}
+				.animated-brand-cycle {
+					animation: brandcycle 4s infinite forwards;
+				}
+			</style>
+			<span class="ascii-wave-inner"></span>
 		</div>
+        </a>
+	</div>
 
-		<div class="justify-self-end md:hidden">
-			<Hamburger client:idle />
+	<div class="col-start-3 justify-self-end md:hidden flex items-center">
+		<Hamburger client:idle />
+	</div>
+
+	<div class="hidden md:flex justify-self-center justify-center">
+		<div class="relative flex flex-row justify-evenly items-center gap-1 rounded-sm">
+			<!-- <span id="email-text" class="underline active:scale-95 cursor-pointer transition-all duration-300 ease-out" title="Click to copy">@gmail.com</span>
+				<script>
+					const email_button = document.getElementById("#email-text") as HTMLSpanElement;
+					if (email_button) {
+						email_button.addEventListener("click", () => {
+							const text = email_button.innerText;
+							navigator.clipboard
+								.writeText(text)
+								.then(() => {
+									const original_text = text;
+									email_button.innerText = "Copied!";
+									setTimeout(() => {
+										email_button.innerText = original_text;
+									}, 1000);
+								})
+								.catch((err) => {
+									console.error("Failed to copy: ", err);
+								});
+						});
+					}
+				</script> -->
+
+			<NavbarSection title="About" href="/about" isActive={pathname === "/about"} />
+			<NavbarSection title="Projects" href="/projects" isActive={pathname === "/projects"} />
+			<NavbarSection title="Contact" href="/contact" isActive={pathname === "/contact"} />
 		</div>
+	</div>
 
-		<div class="hidden md:block">
-			<div
-				class="relative bg-brand justify-self-center flex flex-row justify-evenly items-center border gap-1 px-1 rounded-2xl py-1"
+	<div class="hidden md:flex justify-self-end items-center">
+        <div class="flex flex-row justify-evenly items-center gap-2">
+            <!-- <div class="flex follower items-center mr-4 -translate-y-0.5">
+                <AudioToggle client:only="solid-js"/>
+            </div> -->
+			<a
+				href="https://github.com/externalhost0"
+				aria-label="Github Link"
+				target="_blank"
+				rel="noopener noreferrer"
 			>
-				<NavbarSection title="About" href="/about" isActive={pathname === "/about"} />
-				<NavbarSection title="Projects" href="/projects" isActive={pathname === "/projects"} />
-				<NavbarSection title="Contact" href="/contact" isActive={pathname === "/contact"} />
-			</div>
-		</div>
-
-		<div class="hidden md:block">
-			<div class="justify-self-end flex flex-row justify-evenly items-center gap-2">
-				<a
-					href="https://github.com/externalhost0"
-					aria-label="Github Link"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<iconify-icon icon="mdi:github" class="hover:text-black/60 transition-colors" height={45}
-					></iconify-icon>
-				</a>
-				<a
-					href="https://linkedin.com/in/hayden-rivas"
-					aria-label="Linkedin Link"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<iconify-icon icon="mdi:linkedin" class="hover:text-black/60 transition-colors" height={45}
-					></iconify-icon>
-				</a>
-			</div>
+				<iconify-icon
+					icon="mdi:github"
+					class="text-4xl hover:scale-110 transition-[color,scale] hover:delay-75 hover:text-[#63BB1B]"
+				></iconify-icon>
+			</a>
+			<a
+				href="https://linkedin.com/in/hayden-rivas"
+				aria-label="Linkedin Link"
+				target="_blank"
+				rel="noopener noreferrer"
+			>
+				<iconify-icon
+					icon="mdi:linkedin"
+					class="text-4xl hover:scale-110 transition-[color,scale] hover:delay-75 hover:text-[#F5993D]"
+				></iconify-icon>
+			</a>
 		</div>
 	</div>
 </div>
+
+<script>
+	function updateActiveNav() {
+		const path = window.location.pathname;
+		document.querySelectorAll<HTMLAnchorElement>("[data-nav-href]").forEach((el) => {
+			const href = el.getAttribute("data-nav-href");
+			const isActive = href === path;
+			el.classList.toggle("bg-neutral-900/95", isActive);
+			el.classList.toggle("hover:bg-neutral-800/80", isActive);
+			el.classList.toggle("hover:bg-white", !isActive);
+			el.classList.toggle("hover:text-black", !isActive);
+		});
+	}
+	document.addEventListener("astro:page-load", updateActiveNav);
+	updateActiveNav();
+
+	const waves = document.querySelectorAll<HTMLDivElement>(".ascii-wave");
+	const shades = ["░", "▒", "▓", "█"];
+	const tickMs = 300;
+
+	waves.forEach((wave) => {
+		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+			wave.textContent = "░░▒▒▓▓██▓▓▒▒";
+			return;
+		}
+
+		let charCount = 12;
+		const runLength = 2;
+		const wavelength1 = 12;
+		const wavelength2 = 19;
+		let offset1 = 0;
+		let offset2 = 0;
+		let intervalId: number | undefined;
+
+		const updateWidth = () => {
+			const charWidth = 6;
+			charCount = Math.max(1, Math.floor(wave.clientWidth / charWidth));
+		};
+
+		const getSineShade = (index: number) => {
+			const sin1 = (Math.sin(((index + offset1) / wavelength1) * Math.PI * 2) + 1) / 2;
+			const sin2 = (Math.sin(((index + offset2) / wavelength2) * Math.PI * 2) + 1) / 2;
+			return shades[Math.round(((sin1 + sin2) / 2) * (shades.length - 1))];
+		};
+
+		const render = () => {
+			const sampleCount = Math.ceil(charCount / runLength) + 2;
+
+			wave.textContent = Array.from({ length: sampleCount }, (_, index) => {
+				return getSineShade(index).repeat(runLength);
+			})
+				.join("")
+				.slice(0, charCount);
+		};
+
+		const start = () => {
+			window.clearInterval(intervalId);
+			intervalId = window.setInterval(() => {
+				offset1 += 1;
+				offset2 += 1.6;
+				render();
+			}, tickMs);
+		};
+
+		updateWidth();
+		render();
+		start();
+		window.addEventListener("resize", () => {
+			updateWidth();
+			render();
+		});
+	});
+</script>

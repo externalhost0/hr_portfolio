@@ -2,20 +2,15 @@
 interface Props {
 	title: string;
 	href: string;
-	isActive: boolean;
+	isActive?: boolean;
 }
-const { title, href, isActive } = Astro.props;
-
-const activeClasses = "bg-neutral-900/95 text-white hover:bg-neutral-900/80";
-const inactiveClasses = "hover:bg-white/15 hover:text-black";
+const { title, href } = Astro.props;
 ---
 
 <a
 	href={href}
-	class:list={[
-		"px-8 py-0.5 rounded-xl transition-colors inline-block",
-		isActive ? activeClasses : inactiveClasses,
-	]}
+	data-nav-href={href}
+	class="px-8 py-0.5 rounded-xs transition-colors hover:bg-white text-white hover:text-black"
 >
 	{title}
 </a>

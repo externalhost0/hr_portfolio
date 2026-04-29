@@ -1,9 +1,77 @@
+<footer class="pb-10 px-4 md:px-10 pt-6 md:pt-0 bg-neutral-100">
+	<div>
+		<div class="relative overflow-hidden text-[3rem] md:text-[12rem] font-bold" id="footer-name-wrapper">
+			<p id="footername" class="relative pointer-events-none select-none">Hayden Rivas</p>
+			<p id="footername-echo" class="absolute top-0 left-0 w-full z-10">Hayden Rivas</p>
+		</div>
+		<script>
+			import gsap from "gsap";
+			import ScrollTrigger from "gsap/ScrollTrigger";
+			gsap.registerPlugin(ScrollTrigger);
 
+			function splitIntoChars(el: HTMLElement) {
+				const text = el.textContent ?? "";
+				el.innerHTML = text
+					.split("")
+					.map((c) => `<span style="display:inline-block;white-space:pre;">${c}</span>`)
+					.join("");
+				return Array.from(el.querySelectorAll<HTMLElement>("span"));
+			}
 
-<footer class="footer footer-vertical p-10 bg-neutral-100">
-    <div>
-      <p class="font-bold text-lg">Hayden Rivas</p>
-      <p class="text-black/70">Software Developer & Design Enthusiast</p>
-      <p class="text-sm text-black/70">© {new Date().getFullYear()} All rights reserved</p>
-    </div>
+			function initFooterAnimation() {
+				const mainEl = document.querySelector<HTMLElement>("#footername")!;
+				const echoEl = document.querySelector<HTMLElement>("#footername-echo")!;
+				if (!mainEl || !echoEl) return;
+				const mainChars = splitIntoChars(mainEl);
+				const echoChars = splitIntoChars(echoEl);
+
+				const tl = gsap.timeline({
+					delay: 0.15,
+					scrollTrigger: {
+						scroller: "#lenis-wrapper",
+						trigger: "#footer-name-wrapper",
+						start: window.innerWidth >= 768 ? "top 70%" : "top 90%",
+						once: true,
+					},
+				});
+
+				tl.to(mainChars, { y: "-100%", stagger: 0.04, ease: "power2.in", duration: 0.6 });
+				tl.fromTo(
+					echoChars,
+					{ y: "100%" },
+					{ y: "0%", stagger: 0.04, ease: "power2.out", duration: 0.8 },
+					"-=0.65",
+				);
+			}
+
+			document.addEventListener("astro:page-load", initFooterAnimation);
+		</script>
+		<div class="flex justify-between items-center flex-row">
+			<div class="flex flex-col">
+				<p class="text-black/70">Software Developer & Design Enthusiast</p>
+				<p class="text-sm text-black/70">© {new Date().getFullYear()} All Rights reserved</p>
+			</div>
+			<div class="flex flex-row text-black/70">
+				<div class="flex flex-col">
+					<span>Eugene, OR</span>
+					<p class="text-sm">
+						<span id="local-clock"></span>
+						{" "} (PST)
+					</p>
+				</div>
+			</div>
+			<script>
+				function updateClock() {
+					const myTime = new Date().toLocaleTimeString("en-US", {
+						timeZone: "America/Los_Angeles",
+					});
+					const clockEl = document.getElementById("local-clock");
+					if (clockEl) {
+						clockEl.textContent = myTime;
+					}
+				}
+				setInterval(updateClock, 1000);
+			</script>
+		</div>
+	</div>
 </footer>

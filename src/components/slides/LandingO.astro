@@ -1,0 +1,121 @@
+---
+import ASCIIBackground from "../misc/ASCIIBackground.astro";
+import IconScatter from "../misc/IconScatter.astro";
+import Puzzle from "../misc/Puzzle.astro";
+import type { WitnessPalette, WitnessConfig } from "../misc/PuzzleClient";
+import Navbar from "../navigation/Navbar.astro";
+import Projects from "./Projects.astro";
+
+const kFirstSerialized =
+	'{"grid":[[{"type":"line","line":0,"dir":null,"start":false,"end":null},{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},{"type":"line","line":0,"start":true,"dir":null},{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},{"type":"line","line":0,"dir":null,"start":false,"end":null}],[{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},null,{"type":"line","line":0,"dir":null},null,{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null}],[{"type":"line","line":0,"dir":null,"start":false,"end":null},{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},{"type":"line","line":0,"dir":null,"start":false,"end":null}],[{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},null,{"type":"line","line":0,"dir":null},null,{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null}],[{"type":"line","line":0,"dir":null,"start":false,"end":null},{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},{"type":"line","line":0,"dir":null,"start":false,"end":null}],[{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},null,{"type":"line","line":0,"dir":null},null,{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null}],[{"type":"line","line":0,"dir":null,"start":false,"end":null},{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},{"type":"line","line":0,"dir":null,"end":"right"},{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},{"type":"line","line":0,"dir":null,"start":false,"end":null}]],"largezero":35,"width":7,"height":5,"pillar":false,"settings":{"NEGATIONS_CANCEL_NEGATIONS":true,"SHAPELESS_ZERO_POLY":false,"PRECISE_POLYOMINOS":true,"FLASH_FOR_ERRORS":true,"FAT_STARTPOINTS":false,"CUSTOM_MECHANICS":false},"name":"sorry that\'s not normal that\'s eliminators","startPoint":{"x":0,"y":2},"hasNegations":false,"hasPolyominos":false}';
+const kSimpleSerialized =
+	'{"grid":[[{"type":"line","line":0,"dir":null,"start":false,"end":null},{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"start":true,"dir":null}],[{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},null,{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"poly","color":"yellow","polyshape":1,"line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"poly","color":"yellow","polyshape":1,"line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null,"start":false,"end":null},{"type":"line","line":0,"dir":null,"gap":2,"dot":null,"start":null,"end":null},{"type":"line","line":0,"dir":null,"end":"top"},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null}]],"largezero":54,"width":3,"height":9,"pillar":false,"settings":{"NEGATIONS_CANCEL_NEGATIONS":true,"SHAPELESS_ZERO_POLY":false,"PRECISE_POLYOMINOS":true,"FLASH_FOR_ERRORS":true,"FAT_STARTPOINTS":false,"CUSTOM_MECHANICS":false},"name":"Unnamed Puzzle","startPoint":{"x":0,"y":8},"hasNegations":false,"hasPolyominos":true}';
+const kBasicDotsSerialized =
+	'{"grid":[[{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"start":true,"dir":null,"dot":1,"gap":null}],[{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nega","color":"white","line":0,"dir":null},{"type":"line","line":0,"dir":null,"gap":null}],[{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null}],[{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null}],[{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null,"end":"top","dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null}]],"largezero":49,"width":7,"height":7,"pillar":false,"settings":{"NEGATIONS_CANCEL_NEGATIONS":true,"SHAPELESS_ZERO_POLY":false,"PRECISE_POLYOMINOS":true,"FLASH_FOR_ERRORS":true,"FAT_STARTPOINTS":false,"CUSTOM_MECHANICS":false},"name":"Unnamed Puzzle","autoSolved":true,"startPoint":{"x":0,"y":6},"hasNegations":true,"hasPolyominos":false}';
+const kMediumSerialized =
+	'{"grid":[[{"type":"line","start":true,"line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"end":"left","dir":null}],[{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","end":"right","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","start":true,"line":0,"dir":null}]],"largezero":49,"width":7,"height":7,"pillar":false,"settings":{"NEGATIONS_CANCEL_NEGATIONS":true,"SHAPELESS_ZERO_POLY":false,"PRECISE_POLYOMINOS":true,"FLASH_FOR_ERRORS":true,"FAT_STARTPOINTS":false,"CUSTOM_MECHANICS":false},"name":"Unnamed Rotational Symmetry Puzzle","autoSolved":true,"symmetry":{"x":true,"y":true},"startPoint":{"x":6,"y":6},"hasNegations":false,"hasPolyominos":false}';
+const kCaveElevatorSerialized =
+	'{"grid":[[{"type":"line","line":0,"dir":null,"end":"top"},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"start":null,"dir":null}],[{"type":"line","line":0,"dir":null},{"type":"square","color":"white","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"square","color":"white","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"square","color":"black","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"square","color":"black","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null,"start":true},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null,"start":true}],[{"type":"line","line":0,"dir":null},{"type":"square","color":"white","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"square","color":"white","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"square","color":"black","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"square","color":"black","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"end":"bottom"}]],"largezero":45,"width":5,"height":9,"pillar":false,"settings":{"NEGATIONS_CANCEL_NEGATIONS":true,"SHAPELESS_ZERO_POLY":false,"PRECISE_POLYOMINOS":true,"FLASH_FOR_ERRORS":true,"FAT_STARTPOINTS":false,"CUSTOM_MECHANICS":false},"name":"Unnamed Puzzle","startPoint":{"x":2,"y":0},"hasNegations":false,"hasPolyominos":false}';
+const kSimpleSymmetrySerialized =
+	'{"grid":[[{"type":"line","start":null,"line":0,"dir":null},{"type":"line","line":0,"dir":null,"start":null},{"type":"line","line":0,"dir":null,"start":true},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"end":"left"},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null,"gap":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null}],[{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null,"dot":1,"gap":null},{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"nonce","line":0,"dir":null},{"type":"line","line":0,"dir":null}],[{"type":"line","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","end":"right","line":0,"dir":null},{"type":"line","line":0,"dir":null},{"type":"line","start":true,"line":0,"dir":null},{"type":"line","start":null,"line":0,"dir":null},{"type":"line","start":null,"line":0,"dir":null}]],"largezero":49,"width":7,"height":7,"pillar":false,"settings":{"NEGATIONS_CANCEL_NEGATIONS":true,"SHAPELESS_ZERO_POLY":false,"PRECISE_POLYOMINOS":true,"FLASH_FOR_ERRORS":true,"FAT_STARTPOINTS":false,"CUSTOM_MECHANICS":false},"name":"Unnamed Rotational Symmetry Puzzle","autoSolved":true,"symmetry":{"x":true,"y":true},"startPoint":{"x":0,"y":2},"hasNegations":false,"hasPolyominos":false}';
+const kMyPalette: WitnessPalette = {
+	// the big three
+	// most of the time these two are the same
+	BACKGROUND: "#291d1a", // background inside the tiles
+	OUTER_BACKGROUND: "#1f1818", // background outside the tiles
+
+	FOREGROUND: "#2a2a2a", // the lines/route background
+
+	BORDER: "#333333", // exterior border
+
+	// these three could be the same
+	LINE_DEFAULT: "#555555",
+	LINE_SUCCESS: "#ffffff",
+	LINE_FAIL: "#3f0f10",
+
+	CURSOR: "#ffffff",
+	TEXT_COLOR: "#e0e0e0",
+	PAGE_BACKGROUND: "#0d0d0d",
+	ALT_BACKGROUND: "#1a1a1a",
+	ACTIVE_COLOR: "#2a2a2a",
+
+	// for duals
+	LINE_PRIMARY: "#f53c20",
+	LINE_SECONDARY: "#69a3ff",
+};
+const kStarterPalette: WitnessPalette = {
+	BACKGROUND: "#d69a06",
+	OUTER_BACKGROUND: "#d69a06",
+	FOREGROUND: "#5c4307",
+	LINE_DEFAULT: "#ffe04d",
+};
+const kOrchardPalette: WitnessPalette = {
+	BACKGROUND: "#97ef60",
+	OUTER_BACKGROUND: "#97ef60",
+	FOREGROUND: "#2e4811",
+	LINE_DEFAULT: "#f57ea5",
+	LINE_SUCCESS: "#f57ea5",
+};
+const kDesertPalette: WitnessPalette = {
+	BACKGROUND: "#440702",
+	OUTER_BACKGROUND: "#440702",
+	FOREGROUND: "#000203",
+	LINE_DEFAULT: "#ffc500",
+	LINE_SUCCESS: "#ffc500",
+};
+const kSwampPalette: WitnessPalette = {
+	BACKGROUND: "#899d08",
+	OUTER_BACKGROUND: "#475001",
+	FOREGROUND: "#aab064",
+	LINE_DEFAULT: "#f2e122",
+	LINE_SUCCESS: "#f2e122",
+};
+const kBluePalete: WitnessPalette = {
+	BACKGROUND: "#4763ff",
+	OUTER_BACKGROUND: "#4763ff",
+	FOREGROUND: "#292eaa",
+	LINE_DEFAULT: "#5d95fc",
+	LINE_SUCCESS: "#5d95fc",
+};
+const kMyConfig: WitnessConfig = {
+	theme: "dark",
+	palette: kMyPalette,
+	vignette: 0.3,
+};
+---
+
+<main class="h-full flex flex-col items-center justify-center">
+	<!-- <div class="md:block hidden -z-10">
+        <ASCIIBackground/>
+    </div> -->
+	<div class="font-bold absolute bottom-5 left-5 font-caslon opacity-0" id="landing-title">
+		<span class="text-stone-300 text-6xl md:text-9xl">Hayden Rivas</span>
+		<br />
+		<span class="text-stone-500 text-5xl md:text-8xl"
+			>is building <span class="text-stone-600">software</span></span
+		>
+	</div>
+</main>
+
+<script>
+	import { gsap } from "gsap";
+	const tl = gsap.timeline();
+	// be careful with event listeners, use sparingly
+	window.addEventListener("intro:done", runOnLanding);
+
+	function runOnLanding() {
+		tl.fromTo(
+			"#landing-title",
+			{
+				y: 20,
+			},
+			{
+				opacity: 1,
+				y: 0,
+				duration: 0.5,
+				ease: "circ.out",
+				delay: 0.5,
+			},
+		);
+	}
+</script>

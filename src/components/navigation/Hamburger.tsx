@@ -53,7 +53,7 @@ const Hamburger = () => {
 				</div>
 			</button>
 			<Show when={open()}>
-				<div ref={menuRef} class="fixed inset-0 bg-white flex flex-col justify-between p-8 z-50 pt-20">
+				<div ref={menuRef} class="fixed inset-0 bg-black flex flex-col justify-between p-8 z-50 pt-20">
 					<div class="flex flex-col gap-6 text-3xl font-semibold">
 						<a href="#about" onClick={handleToggle} class="hover:text-black/60">
 							About

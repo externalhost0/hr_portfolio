@@ -1,7 +1,8 @@
 ---
-import Landing from "../components/slides/Landing.astro";
 import CommonLayout from "../layouts/CommonLayout.astro";
-import Main from "../components/Main.astro";
+import Intro from "../components/slides/Intro.astro";
+import Landing from "../components/Landing.astro";
+import Projects from "../components/Projects.astro";
 import "iconify-icon";
 import IntroMotionGraphcis from "../components/IntroMG";
 
@@ -35,34 +36,45 @@ import lighttextureVideo_mp4 from "../assets/videos/texture-light-optimized.mp4"
 import liquidDrop2Video_webm from "../assets/videos/liquiddrop2-optimized.webm";
 import liquidDrop2Video_mp4 from "../assets/videos/liquiddrop2-optimized.mp4";
 
-import DitheredVideo from "../components/misc/DitheredVideo";
+import DitheredVideoGL from "../components/misc/DitheredVideoGL";
+import Footer from "../components/navigation/Footer.astro";
+
+import FireworksVideo_webm from "../assets/videos/fireworks-optimized.webm";
+import FireworksVideo_mp4 from "../assets/videos/fireworks-optimized.mp4";
+
+import CandleVideo_wemp from "../assets/videos/candle-optimized.webm";
+import CandleVideo_mp4 from "../assets/videos/candle-optimized.mp4";
+
+import BirdMaskedVideo_mp4 from "../assets/videos/birdmasked-optimized.mp4";
+import BirdMaskedVideo_webm from "../assets/videos/birdmasked-optimized.webm";
 ---
 
 <CommonLayout>
-	<!-- <DitheredVideo
-        class="animate-[huerotate_10s_linear_0s_infinite]"
-		client:only="solid-js"
-		webm={bloomVideo_webm}
-		mp4={bloomVideo_mp4}
-		playbackSpeed={1.5}
-        dpr={2}
-		dither={{
-			chars: "█▓▒░ ",
-			fontSizeRange: 7,
-			overlay: false,
-			color: "#f283c8",
-			bgColor: "transparent",
-			invert: true,
-			maskMode: "ramp",
-			colorRamp: ["#360806", "#a61712", "red", "#e66cb9", "pink", "white"],
-			trail: 0.05,
-		}}
-		style={{
-			position: "fixed",
-			left: `-10vw`,
-			bottom: `0`,
-			"pointer-events": "none",
-		}} -->
+	<Intro />
+	<div id="leftflower" class="hidden md:block z-0 pointer-events-none fixed -left-[20vw] -bottom-[10vh]">
+		<DitheredVideoGL
+			class="animate-[tighthuerotate_15s_linear_0s_infinite]"
+			client:only="solid-js"
+			webm={bloomVideo_webm}
+			mp4={bloomVideo_mp4}
+			playbackSpeed={2}
+			dpr={2}
+			dither={{
+				chars: "█▓▒░ ",
+				fontSizeRange: 7,
+				overlay: false,
+				bgColor: "transparent",
+				invert: true,
+				maskMode: "ramp",
+				curve: [.39,.53,.99,.49],
+				colorRamp: ["black", "#1538a1", "#34c261", "#b8fbff", "white"],
+				trail: 0.05,
+				screenBlendIntensity: 0.75,
+				useVideoColor: false,
+			}}
+		/>
+	</div>
+
 	<!-- <DitheredVideo
 		client:only="solid-js"
 		webm={liquidVideo_webm}
@@ -72,36 +84,96 @@ import DitheredVideo from "../components/misc/DitheredVideo";
 			position: "fixed",
 			top: 0,
 			left: 0,
-			"pointer-events": "none",
 			"mix-blend-mode": "exclusion",
 		}}
-	/> -->
-	<!-- <DitheredVideo
-		client:only="solid-js"
-		webm={bloom2Video_webm}
-		mp4={bloom2Video_mp4}
-		playbackSpeed={2}
-		dither={{
-			chars: "█▓▒░ ",
-			fontSizeRange: 7,
-			overlay: false,
-			color: "#f283c8",
-			bgColor: "transparent",
-			invert: true,
-			curve: [0.19, 0.42, 0.96, 0.6],
-			// colorRamp: ['white', '#b8fbff', '#34c261', '#1538a1', "black"],
-			colorRamp: ["black", "#1538a1", "#34c261", "#b8fbff", "white"],
-			trail: 0.02,
-		}}
-		style={{
-			position: "fixed",
-			right: `10vw`,
-			bottom: `0`,
-			"pointer-events": "none",
-		}}
-	/> -->
+	    /> -->
 
-	<div id="fire-video" class="fixed inset-0 -z-10 mix-blend-lighten pointer-events-none opacity-95">
+	<div
+		id="rightflower"
+		class="fixed bottom-[-10vh] left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-[-15vw] pointer-events-none"
+	>
+		<DitheredVideoGL
+			class="animate-[tighthuerotate_15s_linear_0s_infinite]"
+			client:only="solid-js"
+			webm={bloom2Video_webm}
+			mp4={bloom2Video_mp4}
+			dpr={2}
+			playbackSpeed={2}
+			dither={{
+				chars: "█▓▒░ ",
+				fontSizeRange: 7,
+				overlay: false,
+				bgColor: "transparent",
+				invert: true,
+				curve: [0.19, 0.42, 0.96, 0.6],
+				// colorRamp: ['white', '#b8fbff', '#34c261', '#1538a1', "black"],
+				colorRamp: ["black", "#1538a1", "#34c261", "#b8fbff", "white"],
+				trail: 0.02,
+				screenBlendIntensity: 0.75,
+			}}
+			style={{
+				"pointer-events": "none",
+			}}
+		/>
+	</div>
+	<script>
+		import gsap from "gsap";
+		import { ScrollTrigger } from "gsap/ScrollTrigger";
+		gsap.registerPlugin(ScrollTrigger);
+
+		function registerPageTriggers() {
+			gsap.to("#rightflower", {
+				scrollTrigger: {
+					scroller: "#lenis-wrapper",
+					trigger: "#nametitle",
+					start: "top 10%",
+					end: "+=200",
+					scrub: true,
+				},
+				opacity: 0,
+				ease: "none",
+			});
+			gsap.to("#leftflower", {
+				scrollTrigger: {
+					scroller: "#lenis-wrapper",
+					trigger: "#nametitle",
+					start: "top 10%",
+					end: "+=200",
+					scrub: true,
+				},
+				opacity: 0,
+				ease: "none",
+			});
+		}
+
+		function setBlackBackground() {
+			const bg = document.getElementById("backdrop");
+			if (bg) (bg as HTMLElement).style.backgroundColor = "black";
+		}
+
+		document.addEventListener("astro:page-load", () => {
+			setBlackBackground();
+			registerPageTriggers();
+		});
+		setBlackBackground();
+		registerPageTriggers();
+	</script>
+
+	<!-- <div class="z-10 mix-blend-soft-light h-[200dvh] pointer-events-none animate-[tighthuerotate_15s_linear_0s_infinite]">
+		<video
+			class="h-full w-full object-cover"
+			onloadedmetadata="this.playbackRate = 0.5"
+			autoplay
+			muted
+			loop
+			playsinline
+		>
+			<source src={textureVideo_webm} type="video/webm" />
+			<source src={textureVideo_mp4} type="video/mp4" />
+		</video>
+	</div> -->
+
+	<!-- <div id="fire-video" class="fixed inset-0 -z-10 mix-blend-lighten pointer-events-none">
 		<video
 			class="h-full w-full object-cover"
 			onloadedmetadata="this.playbackRate = 0.7"
@@ -113,53 +185,24 @@ import DitheredVideo from "../components/misc/DitheredVideo";
 			<source src={fireoverlayVideo_webm} type="video/webm" />
 			<source src={fireoverlayVideo_mp4} type="video/mp4" />
 		</video>
-	</div>
-    
-    <div id="liquid-video" class="opacity-0 fixed inset-0 -z-10 pointer-events-none" style="filter: var(--liquid-filter);">
-		<video
-            id="liquid-video-element"
-			class="h-full w-full object-cover"
-			muted
-			playsinline
-		>
+	</div> -->
+
+	<!-- <div
+		id="liquid-video"
+		class="opacity-0 fixed inset-0 -z-10 pointer-events-none"
+		style="filter: var(--liquid-filter);"
+	>
+		<video id="liquid-video-element" class="h-full w-full object-cover" muted playsinline>
 			<source src={liquidDrop2Video_webm} type="video/webm" />
 			<source src={liquidDrop2Video_mp4} type="video/mp4" />
 		</video>
 	</div>
-    <div id="color-back" class="opacity-0 w-full h-full fixed inset-0 -z-10 bg-[#eef110]" style="filter: var(--liquid-filter);"></div>
-	<script>
-		import gsap from "gsap";
-
-        const liquidVid = document.getElementById("liquid-video-element") as HTMLVideoElement;
-
-		document.getElementById("learn-button")?.addEventListener("click", () => {
-			const tl = gsap.timeline();
-			tl.to("#fire-video", {
-				opacity: 0,
-				ease: "back.out",
-				duration: 1,
-			});
-			tl.to(
-				"#liquid-video",
-				{
-					opacity: 1,
-					ease: "back.in",
-					duration: 1,
-				},
-				"-0.2",
-			);
-            tl.add(() => {
-                if (liquidVid) {
-                    liquidVid.currentTime = 0;
-                    liquidVid.play();
-                }
-            }, 1);
-            tl.to("#color-back", {
-                opacity: 1,
-                duration: 1,
-            }, "+=2.2")
-		});
-	</script>
+	<div
+		id="color-back"
+		class="opacity-0 w-full h-full fixed inset-0 -z-10 bg-[#eef110]"
+		style="filter: var(--liquid-filter);"
+	>
+	</div> -->
 	<!-- <div id="light-video" class="opacity-0 fixed inset-0 -z-10 mix-blend-lighten pointer-events-none">
 		<video
 			class="h-full w-full object-cover"
@@ -208,5 +251,7 @@ import DitheredVideo from "../components/misc/DitheredVideo";
 		}}
 	/> -->
 	<!-- <IntroMotionGraphcis client:only="solid-js" /> -->
-	<Main />
+	<Landing />
+	<Projects />
+	<Footer />
 </CommonLayout>

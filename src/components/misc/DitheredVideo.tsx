@@ -174,9 +174,10 @@ function buildCombinedLUTs(
 	isThreshold: boolean,
 	thresholdCutoff: number,
 	invert: boolean,
-): { charLUT: string[]; colorIdxLUT: Uint8Array } {
+): { charLUT: string[]; colorIdxLUT: Uint8Array; charColLUT: Uint8Array } {
 	const charLUT = new Array<string>(256);
 	const colorIdxLUT = new Uint8Array(256);
+	const charColLUT = new Uint8Array(256);
 	const charsLen = charStr.length;
 	const charScale = charsLen / 256;
 	const lastCharIdx = charsLen - 1;
@@ -187,22 +188,66 @@ function buildCombinedLUTs(
 
 		if (isThreshold) {
 			const isDark = i < thresholdCutoff;
-			charLUT[i] = (isDark !== invert)
-				? charStr.charAt(0)
-				: charStr.charAt(lastCharIdx);
+			const col = (isDark !== invert) ? 0 : lastCharIdx;
+			charLUT[i] = charStr.charAt(col);
+			charColLUT[i] = col;
 		} else {
 			const charLum = invert ? 255 - curved : curved;
-			charLUT[i] = charStr.charAt((charLum * charScale) | 0);
+			const col = (charLum * charScale) | 0;
+			charLUT[i] = charStr.charAt(col);
+			charColLUT[i] = col;
 		}
 	}
 
-	return { charLUT, colorIdxLUT };
+	return { charLUT, colorIdxLUT, charColLUT };
+}
+
+function buildAtlas(
+	charStr: string,
+	cellW: number,
+	cellH: number,
+	fontSize: number,
+	colorLUT: string[] | null,
+	monoColor: string,
+): OffscreenCanvas {
+	const charsLen = charStr.length;
+	const rowCount = colorLUT ? 256 : 1;
+	const canvas = new OffscreenCanvas(charsLen * cellW, rowCount * cellH);
+	const actx = canvas.getContext("2d")!;
+	actx.font = `${fontSize}px monospace`;
+	actx.textBaseline = "top";
+	if (colorLUT) {
+		for (let row = 0; row < 256; row++) {
+			actx.fillStyle = colorLUT[row];
+			for (let ci = 0; ci < charsLen; ci++) {
+				actx.fillText(charStr[ci], ci * cellW, row * cellH);
+			}
+		}
+	} else {
+		actx.fillStyle = monoColor;
+		for (let ci = 0; ci < charsLen; ci++) {
+			actx.fillText(charStr[ci], ci * cellW, 0);
+		}
+	}
+	return canvas;
+}
+
+function getTrailResidueByteFloor(trail: number): number {
+	if (trail <= 0 || trail >= 1) return 0;
+	const stableByteFloor = Math.ceil(0.5 / trail) + 1;
+	return Math.min(32, Math.max(2, stableByteFloor));
 }
 
 export default function DitheredVideo(props: Props) {
+	let containerRef!: HTMLDivElement;
 	let videoRef!: HTMLVideoElement;
 	let canvasRef!: HTMLCanvasElement;
 	let rafId: number;
+	let latestBitmap: ImageBitmap | null = null;
+	let captureInFlight = false;
+	let visible = true;
+	let lastVisibilityCheck = 0;
+	let wasRenderPaused = false;
 
 	const overlay = () => props.dither?.overlay ?? false;
 
@@ -224,6 +269,30 @@ export default function DitheredVideo(props: Props) {
 			? { w: props.width, h: props.height }
 			: null,
 	);
+
+	function isEffectivelyVisible() {
+		if (document.hidden || !containerRef?.isConnected) return false;
+
+		let opacity = 1;
+		let el: HTMLElement | null = containerRef;
+		while (el && el !== document.documentElement) {
+			const style = getComputedStyle(el);
+			if (style.display === "none" || style.visibility === "hidden") return false;
+			opacity *= Number.parseFloat(style.opacity || "1");
+			if (opacity <= 0.01) return false;
+			el = el.parentElement;
+		}
+
+		return true;
+	}
+
+	function shouldRender(now: number) {
+		if (now - lastVisibilityCheck > 120) {
+			visible = isEffectivelyVisible();
+			lastVisibilityCheck = now;
+		}
+		return visible;
+	}
 
 	function init(w: number, h: number) {
 		const dpr = props.dpr ?? 1;
@@ -262,7 +331,7 @@ export default function DitheredVideo(props: Props) {
 		const colorLUTHex = hasColorRamp ? buildColorLUT(cfg.colorRamp!) : null;
 
 		// Combined LUTs: eliminates all per-cell branching in the hot loop
-		const { charLUT, colorIdxLUT } = buildCombinedLUTs(
+		const { charLUT, colorIdxLUT, charColLUT } = buildCombinedLUTs(
 			charStr, curveLUT, isThreshold, thresholdCutoff, invert,
 		);
 
@@ -303,7 +372,7 @@ export default function DitheredVideo(props: Props) {
 			trailCanvas = document.createElement("canvas");
 			trailCanvas.width = cw;
 			trailCanvas.height = ch;
-			tctx = trailCanvas.getContext("2d")!;
+			tctx = trailCanvas.getContext("2d", { willReadFrequently: true })!;
 			tctx.font = `${fontSize}px monospace`;
 			tctx.textBaseline = "top";
 		}
@@ -320,6 +389,8 @@ export default function DitheredVideo(props: Props) {
 		const yPos = new Float64Array(rows);
 		for (let r = 0; r < rows; r++) yPos[r] = r * cellH;
 
+		const atlas = buildAtlas(charStr, cellW, cellH, fontSize, colorLUTHex, color);
+
 		// Frame dedup — skip draw when video frame hasn't changed
 		let lastVideoTime = -1;
 
@@ -332,7 +403,6 @@ export default function DitheredVideo(props: Props) {
 
 		if (isOverlay) {
 			if (colorLUTHex) {
-				// Overlay + colorRamp: per-cell fillStyle changes required
 				drawFrame = (px) => {
 					ctx.clearRect(0, 0, cw, ch);
 					for (let r = rStart; r < rEnd; r++) {
@@ -341,24 +411,20 @@ export default function DitheredVideo(props: Props) {
 						for (let c = cStart; c < cEnd; c++) {
 							const i = (rowOffset + c) << 2;
 							const rawLum = (px[i] * 77 + px[i + 1] * 150 + px[i + 2] * 29) >> 8;
-							ctx.fillStyle = colorLUTHex[colorIdxLUT[rawLum]];
-							ctx.fillText(charLUT[rawLum], xPos[c], y);
+							ctx.drawImage(atlas, charColLUT[rawLum] * cellW, colorIdxLUT[rawLum] * cellH, cellW, cellH, xPos[c], y, cellW, cellH);
 						}
 					}
 				};
 			} else {
-				// Overlay + monochrome: per-cell fillText to maintain exact positioning
-				// (row-string batching drifts because font advance != ceiled cellW)
 				drawFrame = (px) => {
 					ctx.clearRect(0, 0, cw, ch);
-					ctx.fillStyle = color;
 					for (let r = rStart; r < rEnd; r++) {
 						const rowOffset = r * cols;
 						const y = yPos[r];
 						for (let c = cStart; c < cEnd; c++) {
 							const i = (rowOffset + c) << 2;
 							const rawLum = (px[i] * 77 + px[i + 1] * 150 + px[i + 2] * 29) >> 8;
-							ctx.fillText(charLUT[rawLum], xPos[c], y);
+							ctx.drawImage(atlas, charColLUT[rawLum] * cellW, 0, cellW, cellH, xPos[c], y, cellW, cellH);
 						}
 					}
 				};
@@ -376,8 +442,7 @@ export default function DitheredVideo(props: Props) {
 						for (let c = cStart; c < cEnd; c++) {
 							const i = (rowOffset + c) << 2;
 							const rawLum = (px[i] * 77 + px[i + 1] * 150 + px[i + 2] * 29) >> 8;
-							ctx.fillStyle = colorLUTHex[colorIdxLUT[rawLum]];
-							ctx.fillText(charLUT[rawLum], xPos[c], y);
+							ctx.drawImage(atlas, charColLUT[rawLum] * cellW, colorIdxLUT[rawLum] * cellH, cellW, cellH, xPos[c], y, cellW, cellH);
 						}
 					}
 				};
@@ -403,6 +468,27 @@ export default function DitheredVideo(props: Props) {
 			// Trail mode — tctx and trailCanvas guaranteed non-null in this branch
 			const tc = tctx!;
 			const tCanvas = trailCanvas!;
+			let trailFrameCount = 0;
+			const trailResidueByteFloor = getTrailResidueByteFloor(trail);
+			const pruneInterval = trail < 1
+				? Math.max(30, Math.min(120, Math.ceil(Math.log(trailResidueByteFloor / 255) / Math.log(1 - trail))))
+				: 0;
+			const pruneTrailResidue = () => {
+				if (!pruneInterval || ++trailFrameCount % pruneInterval !== 0) return;
+				const img = tc.getImageData(0, 0, cw, ch);
+				const data = img.data;
+				let changed = false;
+				for (let i = 3; i < data.length; i += 4) {
+					if (data[i] > 0 && data[i] <= trailResidueByteFloor) {
+						data[i - 3] = 0;
+						data[i - 2] = 0;
+						data[i - 1] = 0;
+						data[i] = 0;
+						changed = true;
+					}
+				}
+				if (changed) tc.putImageData(img, 0, 0);
+			};
 
 			if (colorLUTHex) {
 				drawFrame = (px) => {
@@ -414,14 +500,14 @@ export default function DitheredVideo(props: Props) {
 						tc.globalCompositeOperation = "source-over";
 						tc.globalAlpha = 1;
 					}
+					pruneTrailResidue();
 					for (let r = rStart; r < rEnd; r++) {
 						const rowOffset = r * cols;
 						const y = yPos[r];
 						for (let c = cStart; c < cEnd; c++) {
 							const i = (rowOffset + c) << 2;
 							const rawLum = (px[i] * 77 + px[i + 1] * 150 + px[i + 2] * 29) >> 8;
-							tc.fillStyle = colorLUTHex[colorIdxLUT[rawLum]];
-							tc.fillText(charLUT[rawLum], xPos[c], y);
+							tc.drawImage(atlas, charColLUT[rawLum] * cellW, colorIdxLUT[rawLum] * cellH, cellW, cellH, xPos[c], y, cellW, cellH);
 						}
 					}
 					ctx.clearRect(0, 0, cw, ch);
@@ -439,6 +525,7 @@ export default function DitheredVideo(props: Props) {
 						tc.globalCompositeOperation = "source-over";
 						tc.globalAlpha = 1;
 					}
+					pruneTrailResidue();
 					tc.fillStyle = color;
 					for (let r = rStart; r < rEnd; r++) {
 						const rowOffset = r * cols;
@@ -458,20 +545,67 @@ export default function DitheredVideo(props: Props) {
 			}
 		}
 
-		function draw() {
-			rafId = requestAnimationFrame(draw);
+		function clearTransientState() {
+			latestBitmap?.close();
+			latestBitmap = null;
+			lastVideoTime = -1;
+			ctx.clearRect(0, 0, cw, ch);
+			tctx?.clearRect(0, 0, cw, ch);
+		}
+
+		async function captureFrame() {
+			if (captureInFlight) return;
 			if (videoRef.readyState < 2) return;
 			if (videoRef.currentTime === lastVideoTime) return;
 			lastVideoTime = videoRef.currentTime;
+			captureInFlight = true;
+			try {
+				const bm = await createImageBitmap(videoRef, {
+					resizeWidth: cols,
+					resizeHeight: rows,
+					resizeQuality: "low",
+				});
+				if (!visible || wasRenderPaused) {
+					bm.close();
+					return;
+				}
+				latestBitmap?.close();
+				latestBitmap = bm;
+			} finally {
+				captureInFlight = false;
+			}
+		}
 
-			octx.drawImage(videoRef, 0, 0, cols, rows);
+		function draw(now: number) {
+			rafId = requestAnimationFrame(draw);
+
+			if (!shouldRender(now)) {
+				if (!wasRenderPaused) {
+					videoRef.pause();
+					clearTransientState();
+					wasRenderPaused = true;
+				}
+				return;
+			}
+
+			if (wasRenderPaused) {
+				videoRef.play().catch(() => {});
+				wasRenderPaused = false;
+			}
+
+			captureFrame();
+			if (!latestBitmap) return;
+			const bm = latestBitmap;
+			latestBitmap = null;
+			octx.drawImage(bm, 0, 0);
+			bm.close();
 			const px = octx.getImageData(0, 0, cols, rows).data;
 			drawFrame(px);
 		}
 
 		const start = () => {
 			videoRef.play().catch(() => {});
-			draw();
+			rafId = requestAnimationFrame(draw);
 		};
 
 		if (videoRef.readyState >= 2) {
@@ -497,12 +631,19 @@ export default function DitheredVideo(props: Props) {
 			);
 		}
 
-		onCleanup(() => cancelAnimationFrame(rafId));
+		onCleanup(() => {
+			cancelAnimationFrame(rafId);
+			latestBitmap?.close();
+			latestBitmap = null;
+		});
 	});
 
 	return (
 		<div
-			ref={(el) => props.onRef?.(el)}
+			ref={(el) => {
+				containerRef = el;
+				props.onRef?.(el);
+			}}
 			class={props.class}
 			id={props.id}
 			style={{
@@ -539,7 +680,7 @@ export default function DitheredVideo(props: Props) {
 				style={{
 					display: "block",
 					position: "absolute",
-                    "image-rendering": 'pixelated',
+					"image-rendering": "pixelated",
 					top: 0,
 					left: 0,
 					width: `${dims()?.w ?? 0}px`,

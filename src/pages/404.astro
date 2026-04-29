@@ -3,7 +3,7 @@ import CommonLayout from "../layouts/CommonLayout.astro";
 ---
 
 <CommonLayout>
-	<div class="w-full h-screen flex gap-4 flex-col items-center justify-center">
+	<div class="w-full h-screen flex gap-4 flex-col items-center justify-center text-white">
 		<h1 class="text-5xl font-caslon"><span class="font-bold text-[3.6rem] font-04b">404!{" "}</span>How did you do that?</h1>
 		<a
 			href="/"
@@ -16,13 +16,13 @@ import CommonLayout from "../layouts/CommonLayout.astro";
 
 <script>
 	import { gsap } from "gsap";
-	gsap.to("#background-frame", {
+	gsap.to("#backdrop", {
 		keyframes: {
-			"0%": { backgroundColor: "#ffffff" },
+			"0%": { backgroundColor: "#ff0f0f" },
 			"25%": { backgroundColor: "#f53c20" },
 			"50%": { backgroundColor: "#20a3f5" },
 			"75%": { backgroundColor: "#a320f5" },
-			"100%": { backgroundColor: "#ffffff" },
+			"100%": { backgroundColor: "#ff0f0f" },
 		},
 		duration: 10,
 		repeat: -1,
