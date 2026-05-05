@@ -32,6 +32,8 @@ jobs:
         run: npm ci
 
       - name: Astro check
+        env:
+          PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ vars.PUBLIC_CLOUDINARY_CLOUD_NAME }}
         run: npx astro check
 
   build:
@@ -52,6 +54,8 @@ jobs:
         run: npm ci
 
       - name: Build Astro site
+        env:
+          PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ vars.PUBLIC_CLOUDINARY_CLOUD_NAME }}
         run: npx astro build
 
       - name: Upload Pages artifact

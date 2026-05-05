@@ -12,8 +12,8 @@
 	import program from "../../scripts/cursorfire";
 
 	const settings: Partial<Settings> = {
-		element: document.querySelector("#ascii"),
-        cursorMode: "Global",
+		element: document.querySelector<HTMLElement>("#ascii"),
+		cursorMode: "Global",
 	};
 
 	run(program, settings)
