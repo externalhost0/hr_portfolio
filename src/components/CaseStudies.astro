@@ -1,0 +1,45 @@
+---
+import qhhome_image from "@assets/imgs/qh_home.png";
+import qhfigmatotal_image from "@assets/imgs/qh_figmatotal.png";
+import qhfigma1_image from "@assets/imgs/qh_figma1.png";
+import CaseStudyPane from "./CaseStudyPane.astro";
+
+const quackhacks_study = {
+	organization: "QuackHacks UO",
+	role: "Frontend Developer & Lead UI/UX Designer",
+	timeframe: "2026",
+	summary:
+		"Led the interface direction for QuackHacks UO, a student hackathon organization at the University of Oregon. The work centered on turning a rough event presence into a clearer digital experience for prospective hackers, sponsors, and organizers.",
+	impact: [
+		"Designed the primary website experience in Figma, including the visual system, layout direction, and responsive event pages.",
+		"Built frontend UI for the public-facing site with an emphasis on fast scanning, event clarity, and a stronger organization identity.",
+		"Worked across design and engineering responsibilities so the final interface stayed close to the original product direction.",
+	],
+	images: [
+		{ ...qhhome_image, alt: "QuackHacks UO homepage interface" },
+		[
+			{ ...qhfigmatotal_image, alt: "QuackHacks UO Figma design overview" },
+			{ ...qhfigma1_image, alt: "QuackHacks UO Figma interface detail" },
+		],
+	],
+};
+---
+
+<section class="relative min-h-screen w-full pt-80">
+	<div class="flex w-full flex-col gap-10 px-2 md:px-8">
+		<header class="max-w-5xl pb-4">
+			<p class="mb-2 ml-2 font-04b text-xs uppercase tracking-widest text-neutral-500">Organization Work</p>
+			<h2 class="font-black font-sans text-5xl leading-none text-white sm:text-6xl md:text-8xl">Case Studies</h2>
+		</header>
+
+		<CaseStudyPane {...quackhacks_study}>
+			<iconify-icon class="case-study-badge" title="Figma" aria-label="Figma" icon="devicon:figma" height={20}></iconify-icon>
+			<iconify-icon class="case-study-badge" title="supbase" aria-label="supabase" icon="skill-icons:supabase-dark" height={25}></iconify-icon>
+			<iconify-icon class="case-study-badge" title="React" aria-label="React" icon="devicon:react" height={20}></iconify-icon>
+			<iconify-icon class="case-study-badge" title="tailwindcss" aria-label="tailwindcss" icon="devicon:tailwindcss" height={25}></iconify-icon>
+			<iconify-icon class="case-study-badge" title="Typescript" aria-label="Typescript" icon="devicon:typescript" height={25}></iconify-icon>
+			<iconify-icon class="case-study-badge" title="threejs" aria-label="threejs" icon="skill-icons:threejs-light" height={25}></iconify-icon>
+			<iconify-icon class="case-study-badge" title="Next.js" aria-label="Next.js" icon="skill-icons:nextjs-light" height={25}></iconify-icon>
+		</CaseStudyPane>
+	</div>
+</section>

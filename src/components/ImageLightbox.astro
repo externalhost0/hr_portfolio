@@ -1,0 +1,192 @@
+<dialog class="image-lightbox" data-image-lightbox>
+	<div class="image-lightbox-backdrop" data-image-lightbox-backdrop></div>
+	<div class="image-lightbox-img-wrap" data-image-lightbox-img-wrap>
+		<img class="image-lightbox-img" src="" alt="" data-image-lightbox-img />
+	</div>
+</dialog>
+
+<style>
+	.image-lightbox {
+		position: fixed;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		max-width: none;
+		max-height: none;
+		background: transparent;
+		border: none;
+		outline: none;
+		padding: 0;
+		margin: 0;
+		overflow: hidden;
+		z-index: 500;
+	}
+
+	.image-lightbox::backdrop {
+		display: none;
+	}
+
+	.image-lightbox-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.85);
+	}
+
+	.image-lightbox-img-wrap {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 2rem;
+		pointer-events: none;
+	}
+
+	.image-lightbox-img {
+		max-width: 100%;
+		max-height: 100%;
+		object-fit: contain;
+		user-select: none;
+		opacity: 0;
+		transition: opacity 180ms ease-out;
+		pointer-events: auto;
+		cursor: zoom-out;
+	}
+
+	.image-lightbox-img.is-loaded {
+		opacity: 1;
+	}
+</style>
+
+<script>
+	import gsap from "gsap";
+
+	function setupImageLightbox() {
+		const dialog = document.querySelector<HTMLDialogElement>("[data-image-lightbox]");
+		const lbImg = document.querySelector<HTMLImageElement>("[data-image-lightbox-img]");
+		const lbBackdrop = document.querySelector<HTMLElement>("[data-image-lightbox-backdrop]");
+		const lbWrap = document.querySelector<HTMLElement>("[data-image-lightbox-img-wrap]");
+
+		if (!dialog || !lbImg || !lbBackdrop || !lbWrap) {
+			return;
+		}
+
+		if (dialog.dataset.bound !== "1") {
+			dialog.dataset.bound = "1";
+
+			let isOpen = false;
+			let isAnimating = false;
+			let loadToken = 0;
+
+			function openLightbox(thumbSrc: string, fullSrc: string, alt: string) {
+				if (isOpen || isAnimating) {
+					return;
+				}
+
+				isOpen = true;
+				isAnimating = true;
+				loadToken++;
+				const myToken = loadToken;
+
+				lbImg.src = thumbSrc;
+				lbImg.alt = alt;
+				lbImg.classList.add("is-loaded");
+				dialog.showModal();
+
+				gsap.fromTo(lbBackdrop, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.out" });
+				gsap.fromTo(
+					lbWrap,
+					{ scale: 0.88, opacity: 0 },
+					{
+						scale: 1,
+						opacity: 1,
+						duration: 0.3,
+						ease: "power2.out",
+						onComplete: () => {
+							isAnimating = false;
+						},
+					},
+				);
+
+				if (fullSrc && fullSrc !== thumbSrc) {
+					const preload = new Image();
+					preload.onload = () => {
+						if (myToken !== loadToken) {
+							return;
+						}
+						lbImg.src = fullSrc;
+					};
+					preload.src = fullSrc;
+				}
+			}
+
+			function closeLightbox() {
+				if (!isOpen || isAnimating) {
+					return;
+				}
+
+				isAnimating = true;
+				loadToken++;
+				gsap.to(lbWrap, {
+					scale: 1.15,
+					opacity: 0,
+					duration: 0.28,
+					ease: "power2.in",
+				});
+				gsap.to(lbBackdrop, {
+					opacity: 0,
+					duration: 0.28,
+					ease: "power2.in",
+					onComplete: () => {
+						dialog.close();
+						lbImg.removeAttribute("src");
+						lbImg.classList.remove("is-loaded");
+						isOpen = false;
+						isAnimating = false;
+					},
+				});
+			}
+
+			dialog.addEventListener("click", closeLightbox);
+			dialog.addEventListener("cancel", (e) => {
+				e.preventDefault();
+				closeLightbox();
+			});
+
+			window.addEventListener("image-lightbox:open", (event) => {
+				const detail = (event as CustomEvent<{ thumbSrc: string; fullSrc: string; alt: string }>).detail;
+				if (!detail) {
+					return;
+				}
+				openLightbox(detail.thumbSrc, detail.fullSrc, detail.alt);
+			});
+		}
+
+		document.querySelectorAll<HTMLElement>("[data-lightbox-trigger]").forEach((trigger) => {
+			if (trigger.dataset.lightboxBound === "1") {
+				return;
+			}
+			trigger.dataset.lightboxBound = "1";
+
+			trigger.addEventListener("click", () => {
+				const selector = trigger.dataset.lightboxImgSelector || "img";
+				const img = trigger.querySelector<HTMLImageElement>(selector);
+				if (!img) {
+					return;
+				}
+
+				const thumbSrc = img.currentSrc || img.src;
+				const fullSrc = trigger.dataset.lightboxFullSrc || thumbSrc;
+				const alt = trigger.dataset.lightboxAlt || img.alt;
+
+				window.dispatchEvent(
+					new CustomEvent("image-lightbox:open", {
+						detail: { thumbSrc, fullSrc, alt },
+					}),
+				);
+			});
+		});
+	}
+
+	document.addEventListener("astro:page-load", setupImageLightbox);
+</script>

@@ -1,9 +1,177 @@
 ---
-import Project from "./misc/Project.astro";
+import ProjectPane from "./ProjectPane.astro";
 
+import pmcstore_image from "@assets/imgs/pmc_store.png";
+import pmcdarkmode_image from "@assets/imgs/pmc_darkmode.png";
+
+import mythril1_image from "@assets/imgs/mythril1.png";
+import mythril2_image from "@assets/imgs/mythril2.png";
+
+import tsplaycore1_image from "@assets/imgs/tsplaycore1.png";
+import tsplaycore2_image from "@assets/imgs/tsplaycore2.png";
+
+import slatedvulkan1_image from "@assets/imgs/slated_vulkan1.png";
+import slatedvulkan2_image from "@assets/imgs/slated_vulkan2.png";
+
+import slatedopenglview1_image from "@assets/imgs/slated_openglview1.png";
+import slatedopenglview2_image from "@assets/imgs/slated_openglview2.png";
+import slatedopenglview3_image from "@assets/imgs/slated_openglview3.png";
+import slatedopenglview4_image from "@assets/imgs/slated_openglview4.png";
+import slatedopenglmodels_image from "@assets/imgs/slated_openglmodels.png";
+
+import distinctshields_image from "@assets/imgs/distinctshields.png";
+
+import spotty_image from "@assets/imgs/spotty_r.png";
 ---
 
+<section class="relative w-full flex flex-col items-center pt-20 pb-12">
+	<!-- literally just the bottom encouraging scroll gradient -->
+	<!-- <div
+		class="w-full h-24 absolute top-0 left-0 bg-linear-to-b from-transparent to-black pointer-events-none -translate-y-full"
+	> -->
+	</div>
+	<header class="w-full px-8 mb-10">
+		<p class="text-neutral-500 text-xs uppercase tracking-widest mb-2 ml-2 font-04b">My Own Work</p>
+		<p id="begin" class="font-black font-sans text-6xl md:text-8xl text-white tracking-tight leading-none">
+			Selected Projects
+		</p>
+	</header>
+	<div class="flex w-full px-8 flex-col">
+		<div class="flex flex-col divide-y-2 divide-solid divide-white/20">
+			<ProjectPane
+				title="Mythril Framework"
+				caption="C++20 Vulkan rendering library for Windows, Linux, and MacOS"
+				description="Implements a custom rendergraph, bindless texture and samplers, and automatic shader reflection. Designed to support complex rendering workloads across all major desktop platforms for those who want absolute control over rendering without having to mess with the fine details of Vulkan."
+				images={[
+					{ ...mythril1_image, alt: "Mythril renderer screenshot" },
+					{ ...mythril2_image, alt: "Mythril demo screenshot" },
+				]}
+				link={new URL("https://github.com/externalhost0/Mythril")}
+				date="2026"
+			>
+				<iconify-icon title="CMake" icon="devicon:cmake" height={20}></iconify-icon>
+				<iconify-icon title="C++" icon="skill-icons:cpp" height={20}></iconify-icon>
+				<iconify-icon title="Vulkan" icon="logos:vulkan" height={20}></iconify-icon>
+			</ProjectPane>
+			<ProjectPane
+				title="ts-play-core"
+				caption="NPM Package for ASCII animations"
+				description="A TypeScript runtime and canvas renderer for composable terminal-style animations. Powers the intro sequence on this site and is published on npm."
+				images={[
+					{ ...tsplaycore1_image, alt: "ts-play-core ASCII animation screenshot" },
+					{ ...tsplaycore2_image, alt: "ts-play-core terminal output screenshot" },
+				]}
+				link={new URL("https://github.com/externalhost0/ts-play-core")}
+				date="2025"
+			>
+				<iconify-icon title="Typescript" icon="devicon:typescript" height={20}></iconify-icon>
+			</ProjectPane>
+			<ProjectPane
+				title="spotty.nvim"
+				caption="Neovim plugin for displaying Spotify information inside Lualine"
+				description="A lightweight plugin that queries the Spotify API and surfaces live track info like current progress, duration and song title, all inside Lualine status bars with minimal hassle."
+				image={{ ...spotty_image, alt: "Lualine showing spotty.nvim" }}
+				link={new URL("https://github.com/externalhost0/spotty.nvim")}
+				date="2025"
+				><iconify-icon title="Lua" icon="material-icon-theme:lua" height={20}></iconify-icon>
+			</ProjectPane>
+			<ProjectPane
+				title="Slated_Vulkan"
+				caption="2nd Iteration high-performance cross-platform ECS game engine and hybrid editor"
+				description="Full ECS architecture with component hot-reload and a hybrid scene editor. Built on Vulkan with a custom scripting bridge, the second iteration after Slated_OpenGL."
+				images={[
+					{ ...slatedvulkan1_image, alt: "Slated_Vulkan" },
+					{ ...slatedvulkan2_image, alt: "Slated_Vulkan " },
+				]}
+				link={new URL("https://github.com/externalhost0/Slated_Vulkan")}
+				date="2025"
+			>
+				<iconify-icon title="CMake" icon="devicon:cmake" height={20}></iconify-icon>
+				<iconify-icon title="C++" icon="skill-icons:cpp" height={20}></iconify-icon>
+				<iconify-icon title="C#" icon="skill-icons:cs" height={20}></iconify-icon>
+				<iconify-icon title="Vulkan" icon="logos:vulkan" height={20}></iconify-icon>
+			</ProjectPane>
+			<ProjectPane
+				title="Pimp My Canvas"
+				caption="Chrome Extension that allows customization of the CanvasLMS"
+				description="Co-built alongside <a href='https://www.linkedin.com/in/jonathan-dipinto-48576532a/' target='_blank'>JDipi</a>, PMC (Pimp My Canvas), is a theme marketplace and extension that lets students restyle CanvasLMS however they choose. Published to the Chrome Web Store."
+				images={[
+					{ ...pmcstore_image, alt: "PMC Store" },
+					{ ...pmcdarkmode_image, alt: "PMC Darkmode Theme" },
+				]}
+				link={new URL("https://github.com/JDipi/PimpMyCanvas")}
+				date="2023"
+			>
+				<iconify-icon title="jQuery" icon="devicon:jquery" height={20}></iconify-icon>
+				<iconify-icon title="TailwindCSS" icon="devicon:tailwindcss" height={20}></iconify-icon>
+				<iconify-icon title="Javascript" icon="logos:javascript" height={20}></iconify-icon>
+			</ProjectPane>
+		</div>
+		<p class="text-4xl font-bold text-neutral-500 py-4 leading-none">Smaller Projects</p>
+		<div class="flex flex-col divide-y-2 divide-solid divide-white/20">
+			<ProjectPane
+				minor
+				title="Slated_OpenGL"
+				caption="1st Iteration ECS game engine and small editor"
+				images={[
+					{ ...slatedopenglview1_image, alt: "Slated_OpenGL Depth View" },
+					{ ...slatedopenglview2_image, alt: "Slated_OpenGL Wireframe View" },
+					{ ...slatedopenglview3_image, alt: "Slated_OpenGL Normals View" },
+					{ ...slatedopenglview4_image, alt: "Slated_OpenGL Shaded View" },
+					{ ...slatedopenglmodels_image, alt: "Slated_OpenGL Shaded View" },
+				]}
+				link={new URL("https://github.com/externalhost0/Slated_OpenGL")}
+				date="2024"
+			>
+				<iconify-icon title="CMake" icon="devicon:cmake" height={20}></iconify-icon>
+				<iconify-icon title="C++" icon="skill-icons:cpp" height={20}></iconify-icon>
+				<iconify-icon title="OpenGL" icon="logos:opengl" height={20}></iconify-icon>
+			</ProjectPane>
+			<ProjectPane
+				minor
+				title="Distinct Shields"
+				caption="Minecraft mod that allows wood types to affect the crafting of shields"
+				image={{ ...distinctshields_image, alt: "Distinct Shields" }}
+				link={new URL("https://github.com/externalhost0/DistinctShields")}
+				date="2023"
+			>
+				<iconify-icon title="Java" icon="skill-icons:java-light" height={25}></iconify-icon>
+			</ProjectPane>
+		</div>
+	</div>
+	<div class="mt-10 w-full px-8">
+		<a
+			href="https://github.com/externalhost0?tab=repositories"
+			target="_blank"
+			class="hover:underline text-brand-light text-sm tracking-wide flex flex-row items-center gap-2"
+		>
+			<iconify-icon title="Right Arrow" icon="pixelarticons:arrow-right"></iconify-icon> More on GitHub
+		</a>
+        <a
+            href="/old" class="hover:underline text-brand-light text-sm tracking-wide flex flex-row items-center gap-2">
+            <iconify-icon title="Right Arrow" icon="pixelarticons:arrow-right"></iconify-icon> Want to see my really old stuff? Click here for a gallery of 3D & Graphic Design work.
+        </a>
+	</div>
+</section>
 
-<div class="h-screen w-full flex flex-col items-center justify-center">
-    <p id="begin" class="text-white">heres some of what ive done</p>
-</div>
+<script>
+	import gsap from "gsap";
+	import { ScrollTrigger } from "gsap/ScrollTrigger";
+	gsap.registerPlugin(ScrollTrigger);
+
+	document.addEventListener("astro:page-load", () => {
+		document.querySelectorAll<HTMLElement>("[data-project-pane]").forEach((pane) => {
+			gsap.from(pane, {
+				scrollTrigger: {
+					trigger: pane,
+					scroller: "#lenis-wrapper",
+					start: "top 88%",
+				},
+				opacity: 0,
+				y: 20,
+				duration: 0.55,
+				ease: "power2.out",
+			});
+		});
+	});
+</script>

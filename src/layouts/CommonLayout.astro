@@ -3,6 +3,7 @@ import { ClientRouter } from "astro:transitions";
 import Navbar from "../components/navigation/Navbar.astro";
 import "../styles/global.css";
 import "lenis/dist/lenis.css";
+import Footer from "../components/navigation/Footer.astro";
 ---
 
 <!doctype html>
@@ -11,15 +12,18 @@ import "lenis/dist/lenis.css";
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="preconnect" href="https://res.cloudinary.com" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Hayden Rivas</title>
 		<ClientRouter />
 	</head>
 	<body>
 		<div id="cursor-follower" transition:persist aria-hidden="true">
-			<div id="cursor-follower-dot"></div>
+			<div id="cursor-follower-dot">
+				<div id="cursor-follower-dot-content"></div>
+			</div>
+			<div id="cursor-follower-label"></div>
 		</div>
-		<div id="cursor-follower-label" transition:persist aria-hidden="true"></div>
 		<script is:inline>
 			(() => {
 				if (window.__hrCursorFollowerInit) return;
@@ -29,6 +33,7 @@ import "lenis/dist/lenis.css";
 				if (!el) return;
 				const dot = el.querySelector("#cursor-follower-dot");
 				if (!dot) return;
+				const dotContent = el.querySelector("#cursor-follower-dot-content");
 				const label = document.getElementById("cursor-follower-label");
 
 				const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
@@ -45,31 +50,92 @@ import "lenis/dist/lenis.css";
 				let currentY = targetY;
 				let visible = false;
 				let hoverTarget = null;
+				let pointerX = targetX;
+				let pointerY = targetY;
+				let lockVelocityX = 0;
+				let lockVelocityY = 0;
+				let cachedHalfX = (el.offsetWidth || 18) / 2;
+				let cachedHalfY = (el.offsetHeight || 18) / 2;
 
 				const HIDDEN_CLASS = "cursor-follower--hidden";
 				const HOVER_CLASS = "cursor-follower--hover";
+				const LABEL_HOVER_CLASS = "cursor-follower--label-hover";
+				const LOCK_STIFFNESS = 0.06;
+				const LOCK_DAMPING = 0.72;
+				const LOCK_REST_DISTANCE = 0.18;
+				const LOCK_REST_VELOCITY = 0.08;
 				el.classList.add(HIDDEN_CLASS);
 
-				const readEase = () => {
+				const alpha = (() => {
 					const raw = getComputedStyle(document.documentElement)
 						.getPropertyValue("--cursor-follower-ease")
 						.trim();
 					const parsed = Number.parseFloat(raw);
 					if (!Number.isFinite(parsed)) return 0.18;
 					return Math.max(0.02, Math.min(1, parsed));
-				};
+				})();
 
 				const closestHoverTarget = (node) => {
 					if (!(node instanceof Element)) return null;
 					return node.closest(
-						"a, button, .follower, [data-cursor='grow'], .follower-lg, [data-cursor='follower-lg'], .follower-xl, [data-cursor='follower-xl'], .label-hover",
+						"a, button, .follower, [data-cursor='grow'], .follower-lg, [data-cursor='follower-lg'], .follower-xl, [data-cursor='follower-xl'], .label-hover, [data-cursor-size], [data-cursor-width], [data-cursor-height], [data-cursor-lock]",
 					);
 				};
 
-				const getCursorText = (target) => {
-					if (!target) return "";
-					if (target.matches(".label-hover")) return target.getAttribute("aria-label") || "";
-					return "";
+				const getLockTarget = () =>
+					hoverTarget?.hasAttribute?.("data-cursor-lock") ? hoverTarget : null;
+
+				const setTargetToElementCenter = (target) => {
+					const rect = target.getBoundingClientRect();
+					targetX = rect.left + rect.width / 2;
+					targetY = rect.top + rect.height / 2;
+				};
+
+				const syncCursorTarget = () => {
+					const lockTarget = getLockTarget();
+					if (lockTarget) {
+						setTargetToElementCenter(lockTarget);
+						return;
+					}
+
+					targetX = pointerX;
+					targetY = pointerY;
+				};
+
+				const getCursorDimension = (target, attribute) => {
+					const raw = target?.getAttribute(attribute)?.trim();
+					if (!raw) return "";
+					if (/^-?\d*\.?\d+$/.test(raw)) return `${raw}px`;
+					return raw;
+				};
+
+				const hasCustomDimensions = (target) =>
+					Boolean(
+						target?.hasAttribute("data-cursor-size") ||
+							target?.hasAttribute("data-cursor-width") ||
+							target?.hasAttribute("data-cursor-height"),
+					);
+
+				const setCursorDimensions = (target) => {
+					const size = getCursorDimension(target, "data-cursor-size");
+					const width = getCursorDimension(target, "data-cursor-width") || size;
+					const height = getCursorDimension(target, "data-cursor-height") || size;
+
+					if (width) el.style.setProperty("--cursor-follower-width", width);
+					else el.style.removeProperty("--cursor-follower-width");
+
+					if (height) el.style.setProperty("--cursor-follower-height", height);
+					else el.style.removeProperty("--cursor-follower-height");
+				};
+
+				const getCursorColor = (target) => {
+					if (!target?.matches(".label-hover")) return "";
+					return target.getAttribute("data-cursor-color") || "";
+				};
+
+				const getCursorDotHTML = (target) => {
+					if (!target?.matches(".label-hover")) return "";
+					return target.getAttribute("data-cursor-dot-html") || "";
 				};
 
 				const getScaleType = (target) => {
@@ -82,13 +148,28 @@ import "lenis/dist/lenis.css";
 				const setHoverTarget = (next) => {
 					if (next === hoverTarget) return;
 					hoverTarget = next;
+					lockVelocityX = 0;
+					lockVelocityY = 0;
 					const scaleType = getScaleType(next);
-					const cursorText = getCursorText(next);
-					el.classList.toggle(HOVER_CLASS, Boolean(hoverTarget) && !scaleType);
+					const customDimensions = hasCustomDimensions(next);
+					const cursorColor = getCursorColor(next);
+					const cursorDotHTML = getCursorDotHTML(next);
+					el.classList.toggle(HOVER_CLASS, Boolean(hoverTarget) && !scaleType && !customDimensions);
 					el.classList.toggle("cursor-follower--hover-lg", Boolean(hoverTarget) && scaleType === "lg");
 					el.classList.toggle("cursor-follower--hover-xl", Boolean(hoverTarget) && scaleType === "xl");
-					label?.classList.toggle("cursor-follower-label--visible", Boolean(cursorText));
-					if (label) label.textContent = cursorText;
+					el.classList.toggle(LABEL_HOVER_CLASS, next?.matches(".label-hover") ?? false);
+					setCursorDimensions(next);
+					if (cursorColor) el.style.setProperty("--cursor-follower-active-color", cursorColor);
+					else el.style.removeProperty("--cursor-follower-active-color");
+					label?.classList.remove("cursor-follower-label--visible");
+					if (label) label.textContent = "";
+					dotContent?.classList.toggle("cursor-follower-dot-content--visible", Boolean(cursorDotHTML));
+					if (dotContent) dotContent.innerHTML = cursorDotHTML;
+					syncCursorTarget();
+					requestAnimationFrame(() => {
+						cachedHalfX = (el.offsetWidth || 18) / 2;
+						cachedHalfY = (el.offsetHeight || 18) / 2;
+					});
 				};
 
 				const showAt = (x, y) => {
@@ -103,12 +184,13 @@ import "lenis/dist/lenis.css";
 				};
 
 				const updateTarget = (event) => {
+					pointerX = event.clientX;
+					pointerY = event.clientY;
 					if (!visible) {
-						showAt(event.clientX, event.clientY);
+						showAt(pointerX, pointerY);
 						return;
 					}
-					targetX = event.clientX;
-					targetY = event.clientY;
+					syncCursorTarget();
 				};
 
 				const hide = () => {
@@ -172,30 +254,68 @@ import "lenis/dist/lenis.css";
 				const tick = (timestamp) => {
 					const delta = lastTime === null ? 16.667 : Math.min(timestamp - lastTime, 100);
 					lastTime = timestamp;
+					syncCursorTarget();
+					cachedHalfX = (el.offsetWidth || 18) / 2;
+					cachedHalfY = (el.offsetHeight || 18) / 2;
 
-					const size = el.offsetWidth || 0;
-					const half = size / 2;
-					const alpha = readEase();
-					const frameAlpha = 1 - Math.pow(1 - alpha, delta / 16.667);
+					const dx = targetX - currentX;
+					const dy = targetY - currentY;
+					if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+						currentX = targetX;
+						currentY = targetY;
+						el.style.transform = `translate3d(${currentX - cachedHalfX}px,${currentY - cachedHalfY}px,0)`;
+						requestAnimationFrame(tick);
+						return;
+					}
 
-					currentX += (targetX - currentX) * frameAlpha;
-					currentY += (targetY - currentY) * frameAlpha;
+					const lockTarget = getLockTarget();
+					if (lockTarget) {
+						const frameScale = delta / 16.667;
+						lockVelocityX = (lockVelocityX + dx * LOCK_STIFFNESS * frameScale) * Math.pow(LOCK_DAMPING, frameScale);
+						lockVelocityY = (lockVelocityY + dy * LOCK_STIFFNESS * frameScale) * Math.pow(LOCK_DAMPING, frameScale);
+						currentX += lockVelocityX * frameScale;
+						currentY += lockVelocityY * frameScale;
 
-					el.style.transform = `translate3d(${currentX - half}px, ${currentY - half}px, 0)`;
-					if (label) label.style.transform = `translate3d(${currentX + 21}px, ${currentY}px, 0) translateY(-50%)`;
+						if (
+							Math.abs(dx) < LOCK_REST_DISTANCE &&
+							Math.abs(dy) < LOCK_REST_DISTANCE &&
+							Math.abs(lockVelocityX) < LOCK_REST_VELOCITY &&
+							Math.abs(lockVelocityY) < LOCK_REST_VELOCITY
+						) {
+							currentX = targetX;
+							currentY = targetY;
+							lockVelocityX = 0;
+							lockVelocityY = 0;
+						}
+					} else {
+						lockVelocityX = 0;
+						lockVelocityY = 0;
+						const frameAlpha = 1 - Math.pow(1 - alpha, delta / 16.667);
+						currentX += dx * frameAlpha;
+						currentY += dy * frameAlpha;
+					}
+
+					el.style.transform = `translate3d(${currentX - cachedHalfX}px,${currentY - cachedHalfY}px,0)`;
 					requestAnimationFrame(tick);
 				};
 				requestAnimationFrame(tick);
 			})();
 		</script>
-		<div id="backdrop" transition:persist class="fixed inset-0 -z-10"></div>
-		<div id="lenis-wrapper" class="fixed inset-0 border-2 rounded-lg border-white/0 overflow-y-scroll z-10">
+		<div id="backdrop" transition:persist class="fixed inset-0 -z-10" aria-hidden="true"></div>
+		<div
+			id="lenis-wrapper"
+			class="fixed inset-5 bg-black rounded-lg overflow-y-scroll z-10 flex flex-col"
+		>
 			<header transition:persist class="sticky top-0 left-0 right-0 z-50 w-full">
 				<Navbar />
 			</header>
-			<main id="lenis-content">
+			<main id="lenis-content" class="flex-1">
 				<slot />
+	            <Footer />
 			</main>
+		</div>
+		<div id="custom-scrollbar" transition:persist aria-hidden="true">
+			<div id="custom-scrollbar-thumb"></div>
 		</div>
 		<script>
 			import gsap from "gsap";
@@ -204,15 +324,74 @@ import "lenis/dist/lenis.css";
 			gsap.registerPlugin(ScrollTrigger);
 
 			let lenis: Lenis | null = null;
+			let lenisRafFn: ((time: number) => void) | null = null;
+			let hideTimer = 0;
+			let scrollbarHoverBound = false;
+
+			let wrapperEl: HTMLElement | null = null;
+			let sbEl: HTMLElement | null = null;
+			let thumbEl: HTMLElement | null = null;
+
+			function updateThumb() {
+				if (!wrapperEl || !sbEl || !thumbEl || !lenis) return;
+				const scrollHeight = wrapperEl.scrollHeight;
+				const clientHeight = wrapperEl.clientHeight;
+				const scrollTop = lenis.scroll;
+				const thumbRatio = clientHeight / scrollHeight;
+				const thumbHeight = Math.max(thumbRatio * clientHeight, 32);
+				const maxOffset = clientHeight - thumbHeight;
+				const thumbTop =
+					scrollHeight > clientHeight ? (scrollTop / (scrollHeight - clientHeight)) * maxOffset : 0;
+				thumbEl.style.height = `${thumbHeight}px`;
+				thumbEl.style.top = `${thumbTop}px`;
+			}
+
+			function showScrollbar() {
+				if (!sbEl) return;
+				sbEl.classList.add("visible");
+				clearTimeout(hideTimer);
+				hideTimer = window.setTimeout(() => sbEl!.classList.remove("visible"), 1200);
+			}
+
+			function destroyLenis() {
+				if (lenisRafFn) {
+					gsap.ticker.remove(lenisRafFn);
+					lenisRafFn = null;
+				}
+				lenis?.destroy();
+				lenis = null;
+			}
 
 			function initLenis() {
 				if (lenis) return;
-				const lenisWrapper = document.querySelector("#lenis-wrapper") as HTMLElement;
+				wrapperEl = document.getElementById("lenis-wrapper");
 				const lenisContent = document.querySelector("#lenis-content") as HTMLElement;
-				lenis = new Lenis({ wrapper: lenisWrapper, content: lenisContent, autoRaf: true });
+				sbEl = document.getElementById("custom-scrollbar");
+				thumbEl = document.getElementById("custom-scrollbar-thumb");
+				lenis = new Lenis({ wrapper: wrapperEl!, content: lenisContent, autoRaf: false });
 				lenis.on("scroll", ScrollTrigger.update);
-				gsap.ticker.add((time) => { lenis!.raf(time * 1000); });
+				lenis.on("scroll", () => {
+					updateThumb();
+					showScrollbar();
+				});
+				lenisRafFn = (time: number) => {
+					lenis!.raf(time * 1000);
+				};
+				gsap.ticker.add(lenisRafFn);
 				gsap.ticker.lagSmoothing(0);
+
+				if (sbEl && !scrollbarHoverBound) {
+					scrollbarHoverBound = true;
+					sbEl.style.pointerEvents = "auto";
+					sbEl.addEventListener("mouseenter", () => {
+						sbEl!.classList.add("visible");
+						clearTimeout(hideTimer);
+					});
+					sbEl.addEventListener("mouseleave", () => {
+						hideTimer = window.setTimeout(() => sbEl!.classList.remove("visible"), 1200);
+					});
+				}
+				updateThumb();
 				ScrollTrigger.scrollerProxy("#lenis-wrapper", {
 					scrollTop(value?: number) {
 						if (arguments.length && value !== undefined) {
@@ -221,15 +400,24 @@ import "lenis/dist/lenis.css";
 						return lenis!.scroll;
 					},
 					getBoundingClientRect() {
-						const lenisWrapper = document.querySelector("#lenis-wrapper") as HTMLElement;
-						return { top: 0, left: 0, width: lenisWrapper.clientWidth, height: lenisWrapper.clientHeight };
+						return { top: 0, left: 0, width: wrapperEl!.clientWidth, height: wrapperEl!.clientHeight };
 					},
 				});
 			}
 
 			function registerBorderTrigger() {
 				ScrollTrigger.getById("border-trigger")?.kill();
-				gsap.to("#lenis-wrapper", {
+				gsap.set("body", { backgroundColor: "black" });
+				gsap.set("#backdrop", {
+					scale: 1.2,
+					transformOrigin: "center center",
+				});
+				const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+				if (pathname !== "/" || !document.querySelector("#nametitle")) {
+					return;
+				}
+
+				const tl = gsap.timeline({
 					scrollTrigger: {
 						id: "border-trigger",
 						scroller: "#lenis-wrapper",
@@ -238,16 +426,18 @@ import "lenis/dist/lenis.css";
 						end: "+=300",
 						scrub: true,
 					},
-					inset: "1.25rem",
-					borderColor: "#ffffffff",
+				});
+				tl.to("#backdrop", {
+					scale: 1,
 					ease: "power3.out",
 				});
 			}
 
 			document.addEventListener("astro:before-swap", () => {
-				ScrollTrigger.getAll()
-					.filter(t => t.vars.id !== "border-trigger")
-					.forEach(t => t.kill());
+				destroyLenis();
+				ScrollTrigger.getAll().forEach((t) => t.kill());
+				gsap.set("body", { backgroundColor: "black" });
+				gsap.set("#backdrop", { scale: 1.2 });
 			});
 
 			document.addEventListener("astro:page-load", () => {
@@ -257,8 +447,68 @@ import "lenis/dist/lenis.css";
 				registerBorderTrigger();
 			});
 
+			// for button in footer
+			const backtotop_btn = document.getElementById("backtotop");
+			backtotop_btn?.addEventListener("click", (e) => {
+				e.preventDefault();
+				lenis?.scrollTo(0, {
+					duration: 2,
+				});
+			});
+
 			initLenis();
 			registerBorderTrigger();
 		</script>
 	</body>
 </html>
+
+<style is:global>
+	#lenis-wrapper {
+		scrollbar-width: none;
+	}
+	#backdrop {
+		pointer-events: none;
+		z-index: 0;
+		background: transparent;
+		transform: scale(1.2);
+		will-change: transform;
+	}
+	#backdrop::before,
+	#backdrop::after {
+		content: "";
+		position: absolute;
+	}
+	#backdrop::before {
+		inset: 0;
+		background: var(--color-brand);
+	}
+	#backdrop::after {
+		inset: 1.25rem;
+		border-radius: 0.5rem;
+		background: black;
+	}
+	#lenis-wrapper::-webkit-scrollbar {
+		display: none;
+	}
+	#custom-scrollbar {
+		position: fixed;
+		top: 20px;
+		right: 0;
+		bottom: 20px;
+		width: 20px;
+		pointer-events: none;
+		z-index: 9999;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+	#custom-scrollbar.visible {
+		opacity: 1;
+	}
+	#custom-scrollbar-thumb {
+		position: absolute;
+		width: 100%;
+		background: rgb(0 0 0 / 0.5);
+		border-radius: 0.5rem;
+		left: 0;
+	}
+</style>

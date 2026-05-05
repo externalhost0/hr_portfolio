@@ -1,0 +1,160 @@
+---
+import { CldImage } from "astro-cloudinary";
+import { getCldImageUrl } from "astro-cloudinary/helpers";
+import type { CollectionEntry } from "astro:content";
+import ImageLightbox from "./ImageLightbox.astro";
+
+interface Props {
+	images: CollectionEntry<"assets">[];
+}
+const { images } = Astro.props;
+
+const TARGET_WIDTH = 640;
+const FULL_WIDTH = 1920;
+const EAGER_COUNT = 6;
+const HIGH_PRIORITY_COUNT = 1;
+const THUMBNAIL_BREAKPOINTS = [360, 480, 640, 828, 960];
+
+function placeholderColor(id: string): string {
+	let h = 0;
+	for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+	const hue = h % 360;
+	const sat = 18 + (h % 22);
+	const lit = 14 + ((h >>> 8) % 18);
+	return `hsl(${hue} ${sat}% ${lit}%)`;
+}
+---
+
+<section class="gallery">
+	{
+		images.map((image, index) => {
+			const nativeW = image.data.width ?? TARGET_WIDTH;
+			const nativeH = image.data.height ?? TARGET_WIDTH;
+			const scaledH = Math.round(TARGET_WIDTH * (nativeH / nativeW));
+			const eager = index < EAGER_COUNT;
+			const highPriority = index < HIGH_PRIORITY_COUNT;
+			const bg = placeholderColor(image.id);
+			const fullSrc = getCldImageUrl({
+				src: image.id,
+				width: FULL_WIDTH,
+				crop: "limit",
+				quality: "auto:best",
+				format: "auto",
+			});
+			return (
+				<div
+					class="gallery-item"
+					style={{
+						aspectRatio: `${nativeW} / ${nativeH}`,
+						backgroundColor: bg,
+					}}
+					data-lightbox-trigger
+					data-lightbox-img-selector=".gallery-img"
+					data-lightbox-full-src={fullSrc}
+					data-lightbox-alt={image.data.display_name ?? image.id}
+				>
+					<CldImage
+						src={image.id}
+						width={TARGET_WIDTH}
+						height={scaledH}
+						alt={image.data.display_name ?? image.id}
+						class="w-full h-auto block gallery-img follower"
+						quality="auto:eco"
+						format="auto"
+						loading={eager ? "eager" : "lazy"}
+						fetchpriority={highPriority ? "high" : eager ? "auto" : "low"}
+						decoding="async"
+						breakpoints={THUMBNAIL_BREAKPOINTS}
+						sizes="(max-width: 560px) 100vw, (max-width: 840px) 50vw, 33vw"
+					/>
+				</div>
+			);
+		})
+	}
+</section>
+
+<ImageLightbox />
+
+<style>
+	.gallery {
+		columns: 3 280px;
+		gap: 0.75rem;
+		width: 100%;
+	}
+	.gallery-item {
+		break-inside: avoid;
+		margin-bottom: 0.75rem;
+		overflow: hidden;
+	}
+	.gallery-img {
+		opacity: 0.001;
+		transition: opacity 200ms ease-out;
+		cursor: zoom-in;
+	}
+	.gallery-img.is-ready,
+	:global(html.no-js) .gallery-img {
+		opacity: 1;
+	}
+</style>
+
+<script>
+	const ROOT_MARGIN = "1500px 0px 1500px 0px";
+
+	function markReady(img: HTMLImageElement) {
+		if (img.complete && img.naturalWidth > 0) {
+			img.classList.add("is-ready");
+			return;
+		}
+		img.addEventListener(
+			"load",
+			() => img.classList.add("is-ready"),
+			{ once: true },
+		);
+		img.addEventListener(
+			"error",
+			() => img.classList.add("is-ready"),
+			{ once: true },
+		);
+	}
+
+	function setupGallery() {
+		const eagerImgs = document.querySelectorAll<HTMLImageElement>(
+			'.gallery-img[loading="eager"]',
+		);
+		eagerImgs.forEach(markReady);
+
+		const deferred = document.querySelectorAll<HTMLImageElement>(
+			'.gallery-img[loading="lazy"]',
+		);
+		if (deferred.length === 0) return;
+
+		const root =
+			(document.querySelector("#lenis-wrapper") as HTMLElement | null) ?? null;
+
+		if (!("IntersectionObserver" in window)) {
+			deferred.forEach((img) => {
+				img.loading = "eager";
+				markReady(img);
+			});
+			return;
+		}
+
+		const io = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (!entry.isIntersecting) continue;
+					const img = entry.target as HTMLImageElement;
+					img.loading = "eager";
+					img.fetchPriority = "high";
+					markReady(img);
+					io.unobserve(img);
+				}
+			},
+			{ root, rootMargin: ROOT_MARGIN, threshold: 0 },
+		);
+
+		deferred.forEach((img) => io.observe(img));
+	}
+
+	document.addEventListener("astro:page-load", setupGallery);
+</script>

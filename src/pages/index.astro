@@ -1,10 +1,9 @@
 ---
 import CommonLayout from "../layouts/CommonLayout.astro";
-import Intro from "../components/slides/Intro.astro";
+import Intro from "../components/Intro.astro";
 import Landing from "../components/Landing.astro";
 import Projects from "../components/Projects.astro";
 import "iconify-icon";
-import IntroMotionGraphcis from "../components/IntroMG";
 
 import fireoverlayVideo_webm from "../assets/videos/fireoverlay-optimized.webm";
 import fireoverlayVideo_mp4 from "../assets/videos/fireoverlay-optimized.mp4";
@@ -47,17 +46,40 @@ import CandleVideo_mp4 from "../assets/videos/candle-optimized.mp4";
 
 import BirdMaskedVideo_mp4 from "../assets/videos/birdmasked-optimized.mp4";
 import BirdMaskedVideo_webm from "../assets/videos/birdmasked-optimized.webm";
+import CaseStudies from "../components/CaseStudies.astro";
 ---
 
 <CommonLayout>
 	<Intro />
+    <!-- <div class="fixed inset-0">
+        <DitheredVideoGL
+            client:only="solid-js"
+            webm={FireworksVideo_webm}
+            mp4={FireworksVideo_mp4}
+            playbackSpeed={1}
+            dpr={2}
+            dither={{
+                chars: "█▓▒░ ",
+                fontSizeRange: 7,
+                overlay: false,
+                bgColor: "transparent",
+                invert: true,
+                maskMode: "ramp",
+                curve: [0.39, 0.53, 0.99, 0.49],
+                colorRamp: ["black", "red", "white"],
+                trail: 0.05,
+                screenBlendIntensity: 0.75,
+                useVideoColor: false,
+            }}
+        />
+    </div> -->
 	<div id="leftflower" class="hidden md:block z-0 pointer-events-none fixed -left-[20vw] -bottom-[10vh]">
 		<DitheredVideoGL
 			class="animate-[tighthuerotate_15s_linear_0s_infinite]"
 			client:only="solid-js"
 			webm={bloomVideo_webm}
 			mp4={bloomVideo_mp4}
-			playbackSpeed={2}
+			playbackSpeed={1.5}
 			dpr={2}
 			dither={{
 				chars: "█▓▒░ ",
@@ -66,7 +88,7 @@ import BirdMaskedVideo_webm from "../assets/videos/birdmasked-optimized.webm";
 				bgColor: "transparent",
 				invert: true,
 				maskMode: "ramp",
-				curve: [.39,.53,.99,.49],
+				curve: [0.39, 0.53, 0.99, 0.49],
 				colorRamp: ["black", "#1538a1", "#34c261", "#b8fbff", "white"],
 				trail: 0.05,
 				screenBlendIntensity: 0.75,
@@ -74,19 +96,6 @@ import BirdMaskedVideo_webm from "../assets/videos/birdmasked-optimized.webm";
 			}}
 		/>
 	</div>
-
-	<!-- <DitheredVideo
-		client:only="solid-js"
-		webm={liquidVideo_webm}
-		mp4={liquidVideo_mp4}
-		dither={{ fontSizeRange: 5, overlay: true, color: "blue", invert: false }}
-		style={{
-			position: "fixed",
-			top: 0,
-			left: 0,
-			"mix-blend-mode": "exclusion",
-		}}
-	    /> -->
 
 	<div
 		id="rightflower"
@@ -159,20 +168,6 @@ import BirdMaskedVideo_webm from "../assets/videos/birdmasked-optimized.webm";
 		registerPageTriggers();
 	</script>
 
-	<!-- <div class="z-10 mix-blend-soft-light h-[200dvh] pointer-events-none animate-[tighthuerotate_15s_linear_0s_infinite]">
-		<video
-			class="h-full w-full object-cover"
-			onloadedmetadata="this.playbackRate = 0.5"
-			autoplay
-			muted
-			loop
-			playsinline
-		>
-			<source src={textureVideo_webm} type="video/webm" />
-			<source src={textureVideo_mp4} type="video/mp4" />
-		</video>
-	</div> -->
-
 	<!-- <div id="fire-video" class="fixed inset-0 -z-10 mix-blend-lighten pointer-events-none">
 		<video
 			class="h-full w-full object-cover"
@@ -187,22 +182,6 @@ import BirdMaskedVideo_webm from "../assets/videos/birdmasked-optimized.webm";
 		</video>
 	</div> -->
 
-	<!-- <div
-		id="liquid-video"
-		class="opacity-0 fixed inset-0 -z-10 pointer-events-none"
-		style="filter: var(--liquid-filter);"
-	>
-		<video id="liquid-video-element" class="h-full w-full object-cover" muted playsinline>
-			<source src={liquidDrop2Video_webm} type="video/webm" />
-			<source src={liquidDrop2Video_mp4} type="video/mp4" />
-		</video>
-	</div>
-	<div
-		id="color-back"
-		class="opacity-0 w-full h-full fixed inset-0 -z-10 bg-[#eef110]"
-		style="filter: var(--liquid-filter);"
-	>
-	</div> -->
 	<!-- <div id="light-video" class="opacity-0 fixed inset-0 -z-10 mix-blend-lighten pointer-events-none">
 		<video
 			class="h-full w-full object-cover"
@@ -216,42 +195,8 @@ import BirdMaskedVideo_webm from "../assets/videos/birdmasked-optimized.webm";
 		</video>
 	</div> -->
 
-	<!-- <DitheredVideo
-		client:only="solid-js"
-		webm={birdVideo_webm}
-		mp4={birdVideo_mp4}
-		dither={{
-			fontSizeRange: 16,
-			overlay: false,
-			invert: false,
-            colorRamp: ["black", "#3624d6", "blue", "cyan", "white"],
-			curve: [.7,-0.01,.29,.99],
-            trail: 0.1
-		}}
-		style={{
-			position: "fixed",
-			right: `17vw`,
-			top: `10vh`,
-			"pointer-events": "none",
-		}}
-	/> -->
-
-	<!-- <DitheredVideo
-		client:only="solid-js"
-		webm={cowVideo_webm}
-		mp4={cowVideo_mp4}
-		scale={0.5}
-		dither={{ fontSizeRange: 6, overlay: true, color: "blue", charMode: { threshold: 40 }, invert: false }}
-		style={{
-			position: "fixed",
-			left: `5vw`,
-			top: `10vh`,
-			"pointer-events": "none",
-			"z-index": 10,
-		}}
-	/> -->
 	<!-- <IntroMotionGraphcis client:only="solid-js" /> -->
 	<Landing />
+	<CaseStudies />
 	<Projects />
-	<Footer />
 </CommonLayout>

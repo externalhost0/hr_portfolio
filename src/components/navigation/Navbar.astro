@@ -9,30 +9,31 @@ const pathname = Astro.url.pathname;
 
 <div class="grid grid-cols-3 items-center px-8 py-5 text-white bg-black">
 	<div class="justify-self-start flex flex-col gap-0">
-		<a href="/" class="justify-self-start font-medium text-wide">Hayden Rivas
-		<div
-			class="ascii-wave w-full h-2 overflow-hidden font-mono text-[10px] leading-none animated-brand-cycle whitespace-nowrap"
-			aria-hidden="true"
-		>
-			<style>
-				@keyframes brandcycle {
-					0% {
-						color: #f76611;
+		<a href="/" data-cursor-lock data-cursor-width="8rem" data-cursor-height="3rem" class="hover:animate-[huerotate_10s_linear_0s_infinite] justify-self-start font-medium text-wide whitespace-nowrap"
+			>Hayden Rivas
+			<div
+				class="ascii-wave w-full h-2 overflow-hidden font-mono text-[10px] leading-none animated-brand-cycle whitespace-nowrap"
+				aria-hidden="true"
+			>
+				<style>
+					@keyframes brandcycle {
+						0% {
+							color: #f76611;
+						}
+						50% {
+							color: #f53c20;
+						}
+						100% {
+							color: #f76611;
+						}
 					}
-					50% {
-						color: #f53c20;
+					.animated-brand-cycle {
+						animation: brandcycle 4s infinite forwards;
 					}
-					100% {
-						color: #f76611;
-					}
-				}
-				.animated-brand-cycle {
-					animation: brandcycle 4s infinite forwards;
-				}
-			</style>
-			<span class="ascii-wave-inner"></span>
-		</div>
-        </a>
+				</style>
+				<span class="ascii-wave-inner"></span>
+			</div>
+		</a>
 	</div>
 
 	<div class="col-start-3 justify-self-end md:hidden flex items-center">
@@ -63,22 +64,24 @@ const pathname = Astro.url.pathname;
 					}
 				</script> -->
 
-			<NavbarSection title="About" href="/about" isActive={pathname === "/about"} />
+			<!-- <NavbarSection title="About" href="/about" isActive={pathname === "/about"} />
 			<NavbarSection title="Projects" href="/projects" isActive={pathname === "/projects"} />
-			<NavbarSection title="Contact" href="/contact" isActive={pathname === "/contact"} />
+			<NavbarSection title="Contact" href="/contact" isActive={pathname === "/contact"} /> -->
 		</div>
 	</div>
 
 	<div class="hidden md:flex justify-self-end items-center">
-        <div class="flex flex-row justify-evenly items-center gap-2">
-            <!-- <div class="flex follower items-center mr-4 -translate-y-0.5">
+		<div class="flex flex-row justify-evenly items-center gap-2">
+			<!-- <div class="flex follower items-center mr-4 -translate-y-0.5">
                 <AudioToggle client:only="solid-js"/>
             </div> -->
 			<a
 				href="https://github.com/externalhost0"
+				data-cursor-lock
 				aria-label="Github Link"
 				target="_blank"
 				rel="noopener noreferrer"
+				class="inline-flex size-10 items-center justify-center leading-none"
 			>
 				<iconify-icon
 					icon="mdi:github"
@@ -87,13 +90,28 @@ const pathname = Astro.url.pathname;
 			</a>
 			<a
 				href="https://linkedin.com/in/hayden-rivas"
+				data-cursor-lock
 				aria-label="Linkedin Link"
 				target="_blank"
 				rel="noopener noreferrer"
+				class="inline-flex size-10 items-center justify-center leading-none"
 			>
 				<iconify-icon
 					icon="mdi:linkedin"
 					class="text-4xl hover:scale-110 transition-[color,scale] hover:delay-75 hover:text-[#F5993D]"
+				></iconify-icon>
+			</a>
+			<a
+				href="mailto:haydenr261@gmail.com"
+				data-cursor-lock
+				aria-label="Email Link"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="inline-flex size-10 items-center justify-center leading-none"
+			>
+				<iconify-icon
+					icon="mdi:email"
+					class="text-4xl hover:scale-110 transition-[color,scale] hover:delay-75 hover:text-[#dddddd]"
 				></iconify-icon>
 			</a>
 		</div>

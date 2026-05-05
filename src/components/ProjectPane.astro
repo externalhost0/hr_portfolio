@@ -1,0 +1,177 @@
+---
+import type { ImageMetadata } from "astro";
+import { Image } from "astro:assets";
+
+interface ImageExtended extends ImageMetadata {
+	alt: string;
+}
+interface Props {
+	title: string;
+	caption: string;
+	description?: string;
+	image?: ImageExtended;
+	images?: ImageExtended[];
+	link: URL;
+	date: string;
+	minor?: boolean;
+}
+const { title, caption, description, image, images, link, date, minor = false } = Astro.props;
+const projectImages = images?.length ? images : image ? [image] : [];
+---
+
+<div class:list={["grid grid-cols-1 items-center gap-4 md:gap-12", minor ? "py-6 md:grid-cols-[20rem_minmax(0,1fr)]" : "py-6 md:grid-cols-[28rem_minmax(0,1fr)]"]}
+	data-minor={minor || undefined}
+	data-project-pane>
+	{
+		projectImages.length > 0 && (
+			<div class="flex flex-col items-center gap-2" data-project-img-wrapper>
+				<a
+					href={link}
+					target="_blank"
+					class="label-hover project-img-link"
+					data-cursor-dot-html='<iconify-icon icon="lucide:external-link"></iconify-icon>'
+				>
+					<div class="img-rotate">
+						<div class="project-img-cycle" data-project-img-cycle>
+							{projectImages.map((projectImage, index) => (
+								<Image
+									class:list={["project-img", { "is-active": index === 0 }]}
+									loading="lazy"
+									src={projectImage}
+									format="webp"
+									quality={85}
+									alt={projectImage.alt}
+								/>
+							))}
+						</div>
+					</div>
+				</a>
+				{projectImages.length > 1 && (
+					<div class="flex gap-1.5 justify-center" data-dot-container>
+						{projectImages.map((_, i) => (
+							<span class:list={["img-dot", { "is-active": i === 0 }]} />
+						))}
+					</div>
+				)}
+			</div>
+		)
+	}
+	<div class="flex flex-row items-start justify-between gap-4">
+		<div class="flex flex-col gap-1">
+			<a href={link} target="_blank" class:list={["font-bold hover:underline", minor ? "text-xl text-neutral-400" : "text-2xl text-neutral-100"]}>{title}</a>
+			<p class:list={["text-sm", minor ? "text-neutral-500" : "text-base text-neutral-300"]}>{caption}</p>
+			{description && !minor && (
+				<p class="project-description text-sm text-neutral-500 leading-relaxed mt-0.5" set:html={description} />
+			)}
+			<div class={"flex flex-row gap-2 h-fit items-center mt-1"}>
+				<slot />
+			</div>
+		</div>
+		<p class="portfolio-date-stamp shrink-0 mt-2">{date}</p>
+	</div>
+</div>
+
+<style>
+	.project-img-link {
+		display: block;
+		width: fit-content;
+		max-width: 100%;
+		justify-self: center;
+	}
+
+	.project-img-cycle {
+		display: grid;
+		justify-items: center;
+		align-items: center;
+		width: fit-content;
+		max-width: 100%;
+	}
+
+	.project-img {
+		grid-area: 1 / 1;
+		width: auto;
+		height: auto;
+		max-width: 100%;
+		max-height: min(calc(28rem * 0.6), 38vh);
+		object-fit: contain;
+		opacity: 0;
+		transition: opacity 0.45s ease;
+	}
+
+	[data-minor] .project-img {
+		max-height: min(calc(28rem * 0.55), 28vh);
+	}
+
+	.project-img.is-active {
+		opacity: 1;
+	}
+
+	.img-rotate {
+		transition: transform 0.3s ease;
+		transform: scale(1);
+	}
+	.project-img-link:hover .img-rotate {
+		transform: scale(1.025);
+	}
+
+	.img-dot {
+		display: block;
+		width: 5px;
+		height: 5px;
+		border-radius: 9999px;
+		background-color: rgba(255, 255, 255, 0.25);
+		transition: background-color 0.3s ease, transform 0.3s ease;
+	}
+	.img-dot.is-active {
+		background-color: rgba(255, 255, 255, 0.85);
+		transform: scale(1.3);
+	}
+
+	.project-description :global(a) {
+		color: rgb(245, 245, 245);
+		text-decoration: underline;
+		text-decoration-color: rgba(255, 255, 255, 0.35);
+		text-underline-offset: 0.18em;
+		transition:
+			color 160ms ease,
+			text-decoration-color 160ms ease;
+	}
+
+	.project-description :global(a:hover) {
+		color: #f76611;
+		text-decoration-color: currentColor;
+	}
+</style>
+
+<script>
+	const cycleInterval = 6000;
+	const cycleStagger = 550;
+
+	document.querySelectorAll<HTMLElement>("[data-project-img-cycle]").forEach((cycle, cycleIndex) => {
+		const images = Array.from(cycle.querySelectorAll<HTMLElement>(".project-img"));
+
+		if (images.length < 2) {
+			return;
+		}
+
+		const wrapper = cycle.closest("[data-project-img-wrapper]");
+		const dots = wrapper
+			? Array.from(wrapper.querySelectorAll<HTMLElement>(".img-dot"))
+			: [];
+
+		let activeIndex = 0;
+
+		const showNextImage = () => {
+			images[activeIndex].classList.remove("is-active");
+			dots[activeIndex]?.classList.remove("is-active");
+			activeIndex = (activeIndex + 1) % images.length;
+			images[activeIndex].classList.add("is-active");
+			dots[activeIndex]?.classList.add("is-active");
+		};
+
+		window.setTimeout(() => {
+			showNextImage();
+			window.setInterval(showNextImage, cycleInterval);
+		}, cycleIndex * cycleStagger);
+	});
+</script>

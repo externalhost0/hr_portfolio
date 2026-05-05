@@ -1,0 +1,12 @@
+---
+import CollectionGallery from "../components/CollectionGallery.astro";
+import { getCollection } from "astro:content";
+import CommonLayout from "../layouts/CommonLayout.astro";
+const images = await getCollection("old");
+---
+
+<CommonLayout>
+	<div class="px-6 py-4 min-h-screen">
+		<CollectionGallery images={images} />
+	</div>
+</CommonLayout>

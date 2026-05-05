@@ -5,9 +5,12 @@
 	background-color: black;
 	/* higher = snappier, lower = slower */
 	--cursor-follower-ease: 0.08;
+	/* hover grow amounts */
 	--cursor-follower-hover-scale: 2.5;
 	--cursor-follower-hover-scale-lg: 5.5;
 	--cursor-follower-hover-scale-xl: 17.5;
+	/* default lollipop color */
+	--cursor-follower-label-color: var(--color-brand, #ff5500);
 }
 /* selection css */
 ::selection {
@@ -39,11 +42,14 @@ body {
 	position: fixed;
 	left: 0;
 	top: 0;
-	width: var(--cursor-follower-size, 18px);
-	height: var(--cursor-follower-size, 18px);
+	width: var(--cursor-follower-width, var(--cursor-follower-size, 18px));
+	height: var(--cursor-follower-height, var(--cursor-follower-size, 18px));
 	transform: translate3d(-9999px, -9999px, 0);
 	opacity: 1;
-	transition: opacity 140ms ease-out;
+	transition:
+		opacity 140ms ease-out,
+		width 160ms ease-out,
+		height 160ms ease-out;
 	will-change: transform;
 	pointer-events: none;
 	z-index: 9999;
@@ -55,39 +61,72 @@ body {
 	position: absolute;
 	left: 50%;
 	top: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	width: 100%;
 	height: 100%;
-	border-radius: 9999px;
-	/* border: 2px solid rgba(255, 85, 0, 0.95); */
-	background: rgba(255, 255, 255, 1);
-	/* box-shadow: 0 0 16px rgba(255, 255, 255, 0.15); */
+	border-radius: 0;
+	/* normal cursor color */
+	background-color: rgba(255, 255, 255, 1);
 	transform: translate(-50%, -50%) scale(var(--cursor-follower-scale));
-	transition: transform 140ms ease-out;
+	transition:
+		transform 140ms ease-out,
+		background-color 180ms ease-out;
 	will-change: transform;
+	z-index: 1;
+}
+
+#cursor-follower-dot-content {
+	/* icon inside dot */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-size: 0.6rem;
+	line-height: 1;
+	opacity: 0;
+	transform: scale(0.75);
+	transition:
+		opacity 120ms ease-out,
+		transform 160ms ease-out;
+}
+
+#cursor-follower-dot-content iconify-icon {
+	display: block;
+	font-size: 1em;
 }
 
 #cursor-follower-label {
-	position: fixed;
-	left: 0;
-	top: 0;
+	/* label starts under dot */
+	position: absolute;
+	left: 50%;
+	top: 50%;
 	max-width: min(240px, calc(100vw - 48px));
-	padding: 0.35rem 0.5rem;
-	border: 1px solid rgba(255, 255, 255, 0.24);
-	border-radius: 2px;
-	background: var(--color-brand-light);
+	min-height: 1.35rem;
+	/* tweak final value to move text left/right */
+	padding: 0.35rem 0.6rem 0.35rem calc((var(--cursor-follower-size, 18px) * var(--cursor-follower-scale) / 2) + 0.45rem);
+	border-radius: 0 9999px 9999px 0;
+	background-color: var(--cursor-follower-active-color, var(--cursor-follower-label-color));
 	color: white;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
 	font-size: 0.75rem;
 	font-weight: 500;
 	line-height: 1.1;
 	opacity: 0;
-	transform: translate3d(-9999px, -9999px, 0);
+	clip-path: inset(0 100% 0 0 round 0 9999px 9999px 0);
+	transform: translateY(-50%) translateX(-0.5rem);
+	transform-origin: left center;
 	transition:
 		opacity 120ms ease-out,
-		transform 120ms ease-out;
+		clip-path 180ms ease-out,
+		transform 180ms ease-out,
+		background-color 180ms ease-out;
 	white-space: nowrap;
 	pointer-events: none;
-	z-index: 10000;
-	will-change: transform;
+	z-index: 0;
 }
 
 #cursor-follower.cursor-follower--hidden {
@@ -106,8 +145,24 @@ body {
 	--cursor-follower-scale: var(--cursor-follower-hover-scale-xl, 7.5);
 }
 
+#cursor-follower.cursor-follower--label-hover {
+	mix-blend-mode: normal;
+	filter: drop-shadow(0 0.45rem 0.8rem rgba(0, 0, 0, 0.28));
+}
+
+#cursor-follower.cursor-follower--label-hover #cursor-follower-dot {
+	background-color: var(--cursor-follower-active-color, var(--cursor-follower-label-color));
+}
+
 #cursor-follower-label.cursor-follower-label--visible {
 	opacity: 1;
+	clip-path: inset(0 0 0 0 round 0 9999px 9999px 0);
+	transform: translateY(-50%) translateX(0);
+}
+
+#cursor-follower-dot-content.cursor-follower-dot-content--visible {
+	opacity: 1;
+	transform: scale(1);
 }
 
 @media (hover: none) {
@@ -183,6 +238,16 @@ iconify-icon {
 	display: inline-block;
 	width: 1em;
 	height: 1em;
+}
+
+.portfolio-date-stamp {
+	font-family: var(--font-04b);
+	font-size: 0.875rem;
+	font-weight: 400;
+	line-height: 1;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: rgb(115 115 115);
 }
 
 @keyframes ticker-right {
