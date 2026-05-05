@@ -155,9 +155,7 @@ import spotty_image from "@assets/imgs/spotty_r.png";
 </section>
 
 <script>
-	import gsap from "gsap";
-	import { ScrollTrigger } from "gsap/ScrollTrigger";
-	gsap.registerPlugin(ScrollTrigger);
+    import { gsap } from "../lib/gsap";
 
 	document.addEventListener("astro:page-load", () => {
 		document.querySelectorAll<HTMLElement>("[data-project-pane]").forEach((pane) => {

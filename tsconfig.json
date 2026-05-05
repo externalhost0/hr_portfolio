@@ -12,7 +12,8 @@
     "jsxImportSource": "solid-js",
     "paths": {
 		"@/*": ["./*"],
-        "@assets/*": ["./src/assets/*"]
+        "@assets/*": ["./src/assets/*"],
+        "@lib/*": ["./src/lib/*"]
     }
   }
 }

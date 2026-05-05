@@ -13,24 +13,28 @@ import AnimatedArrow from "./misc/AnimatedArrow.astro";
 	<div id="landingfade" class="w-full h-16 fixed bottom-0 bg-linear-to-b from-transparent to-neutral-700/40">
 	</div>
 	<script>
-		import gsap from "gsap";
-		import { ScrollTrigger } from "gsap/ScrollTrigger";
-		gsap.registerPlugin(ScrollTrigger);
-		const tl = gsap.timeline({
-			scrollTrigger: {
-				scroller: "#lenis-wrapper",
-				trigger: "#landingfade",
-				start: "center 90%",
-				end: "+=200",
-				scrub: true,
-			},
-		});
-		tl.to("#landingfade", {
-			opacity: 0,
-			ease: "none",
-		});
-		tl.to("#landingfade", {
-			display: "none",
-		});
+        import { gsap, ScrollTrigger } from "../lib/gsap";
+
+		let landingFadeTl: gsap.core.Timeline | null = null;
+
+		function initLandingFade() {
+			landingFadeTl?.kill();
+			const el = document.getElementById("landingfade");
+			if (!el) return;
+			gsap.set(el, { clearProps: "all" });
+			landingFadeTl = gsap.timeline({
+				scrollTrigger: {
+					scroller: "#lenis-wrapper",
+					trigger: el,
+					start: "center 90%",
+					end: "+=200",
+					scrub: true,
+				},
+			});
+			landingFadeTl.to(el, { opacity: 0, ease: "none" });
+			landingFadeTl.to(el, { display: "none" });
+		}
+
+		document.addEventListener("astro:page-load", initLandingFade);
 	</script>
 </div>

@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -231,7 +230,6 @@ body {
 	--font-optiker: "Optiker-K", serif;
 	--font-3t3: "3t3-5x3", serif;
 	--font-04b: "04b_03b", serif;
-	--font-libre: "EB Garamond", serif;
 }
 
 iconify-icon {
@@ -359,19 +357,6 @@ iconify-icon {
 	100% {
 		background-color: #f76611;
 	}
-}
-
-.cross {
-	width: 100px;
-	height: 100px;
-	background:
-		linear-gradient(to right, #b5b5b5 2px, transparent 2px) no-repeat center,
-		linear-gradient(to bottom, #b5b5b5 2px, transparent 2px) no-repeat center;
-	background-size:
-		4px 100%,
-		100% 4px;
-	mix-blend-mode: multiply;
-	opacity: 0.5;
 }
 
 @keyframes fadein {

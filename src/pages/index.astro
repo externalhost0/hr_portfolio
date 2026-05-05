@@ -126,9 +126,7 @@ import CaseStudies from "../components/CaseStudies.astro";
 		/>
 	</div>
 	<script>
-		import gsap from "gsap";
-		import { ScrollTrigger } from "gsap/ScrollTrigger";
-		gsap.registerPlugin(ScrollTrigger);
+        import { gsap } from "@lib/gsap";
 
 		function registerPageTriggers() {
 			gsap.to("#rightflower", {

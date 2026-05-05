@@ -5,7 +5,7 @@ import type { CollectionEntry } from "astro:content";
 import ImageLightbox from "./ImageLightbox.astro";
 
 interface Props {
-	images: CollectionEntry<"assets">[];
+	images: CollectionEntry<"old">[];
 }
 const { images } = Astro.props;
 
@@ -62,7 +62,7 @@ function placeholderColor(id: string): string {
 						quality="auto:eco"
 						format="auto"
 						loading={eager ? "eager" : "lazy"}
-						fetchpriority={highPriority ? "high" : eager ? "auto" : "low"}
+						fetchpriority={highPriority ? "high" : undefined}
 						decoding="async"
 						breakpoints={THUMBNAIL_BREAKPOINTS}
 						sizes="(max-width: 560px) 100vw, (max-width: 840px) 50vw, 33vw"

@@ -318,10 +318,8 @@ import Footer from "../components/navigation/Footer.astro";
 			<div id="custom-scrollbar-thumb"></div>
 		</div>
 		<script>
-			import gsap from "gsap";
-			import { ScrollTrigger } from "gsap/ScrollTrigger";
+            import { gsap, ScrollTrigger } from "../lib/gsap";
 			import Lenis from "lenis";
-			gsap.registerPlugin(ScrollTrigger);
 
 			let lenis: Lenis | null = null;
 			let lenisRafFn: ((time: number) => void) | null = null;
@@ -447,14 +445,19 @@ import Footer from "../components/navigation/Footer.astro";
 				registerBorderTrigger();
 			});
 
-			// for button in footer
-			const backtotop_btn = document.getElementById("backtotop");
-			backtotop_btn?.addEventListener("click", (e) => {
-				e.preventDefault();
-				lenis?.scrollTo(0, {
-					duration: 2,
+			const backToTopWindow = window as Window & { __hrBackToTopInit?: boolean };
+			if (!backToTopWindow.__hrBackToTopInit) {
+				backToTopWindow.__hrBackToTopInit = true;
+				document.addEventListener("click", (e) => {
+					const target = e.target instanceof Element ? e.target.closest("#backtotop") : null;
+					if (!target) return;
+
+					e.preventDefault();
+					lenis?.scrollTo(0, {
+						duration: 2,
+					});
 				});
-			});
+			}
 
 			initLenis();
 			registerBorderTrigger();

@@ -2,8 +2,6 @@
 import "iconify-icon";
 
 import Hamburger from "./Hamburger";
-import NavbarSection from "./NavbarSection.astro";
-import AudioToggle from "../misc/AudioToggle";
 const pathname = Astro.url.pathname;
 ---
 
@@ -72,9 +70,6 @@ const pathname = Astro.url.pathname;
 
 	<div class="hidden md:flex justify-self-end items-center">
 		<div class="flex flex-row justify-evenly items-center gap-2">
-			<!-- <div class="flex follower items-center mr-4 -translate-y-0.5">
-                <AudioToggle client:only="solid-js"/>
-            </div> -->
 			<a
 				href="https://github.com/externalhost0"
 				data-cursor-lock

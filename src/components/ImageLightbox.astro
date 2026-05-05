@@ -59,7 +59,24 @@
 </style>
 
 <script>
-	import gsap from "gsap";
+	const prefersReducedMotion = () =>
+		window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+	function animateElement(
+		element: HTMLElement,
+		keyframes: Keyframe[],
+		options: KeyframeAnimationOptions,
+	) {
+		if (prefersReducedMotion()) {
+			const finalFrame = keyframes.at(-1);
+			if (finalFrame) {
+				Object.assign(element.style, finalFrame);
+			}
+			return Promise.resolve();
+		}
+
+		return element.animate(keyframes, options).finished;
+	}
 
 	function setupImageLightbox() {
 		const dialog = document.querySelector<HTMLDialogElement>("[data-image-lightbox]");
@@ -71,14 +88,19 @@
 			return;
 		}
 
-		if (dialog.dataset.bound !== "1") {
-			dialog.dataset.bound = "1";
+		const lightboxDialog = dialog;
+		const lightboxImg = lbImg;
+		const lightboxBackdrop = lbBackdrop;
+		const lightboxWrap = lbWrap;
+
+		if (lightboxDialog.dataset.bound !== "1") {
+			lightboxDialog.dataset.bound = "1";
 
 			let isOpen = false;
 			let isAnimating = false;
 			let loadToken = 0;
 
-			function openLightbox(thumbSrc: string, fullSrc: string, alt: string) {
+			async function openLightbox(thumbSrc: string, fullSrc: string, alt: string) {
 				if (isOpen || isAnimating) {
 					return;
 				}
@@ -88,25 +110,31 @@
 				loadToken++;
 				const myToken = loadToken;
 
-				lbImg.src = thumbSrc;
-				lbImg.alt = alt;
-				lbImg.classList.add("is-loaded");
-				dialog.showModal();
+				lightboxImg.src = thumbSrc;
+				lightboxImg.alt = alt;
+				lightboxImg.classList.add("is-loaded");
+				lightboxDialog.showModal();
 
-				gsap.fromTo(lbBackdrop, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.out" });
-				gsap.fromTo(
-					lbWrap,
-					{ scale: 0.88, opacity: 0 },
-					{
-						scale: 1,
-						opacity: 1,
-						duration: 0.3,
-						ease: "power2.out",
-						onComplete: () => {
-							isAnimating = false;
-						},
-					},
-				);
+				lightboxBackdrop.style.opacity = "0";
+				lightboxWrap.style.opacity = "0";
+				lightboxWrap.style.transform = "scale(0.88)";
+
+				await Promise.all([
+					animateElement(
+						lightboxBackdrop,
+						[{ opacity: "0" }, { opacity: "1" }],
+						{ duration: 250, easing: "ease-out", fill: "forwards" },
+					),
+					animateElement(
+						lightboxWrap,
+						[
+							{ opacity: "0", transform: "scale(0.88)" },
+							{ opacity: "1", transform: "scale(1)" },
+						],
+						{ duration: 300, easing: "ease-out", fill: "forwards" },
+					),
+				]);
+				isAnimating = false;
 
 				if (fullSrc && fullSrc !== thumbSrc) {
 					const preload = new Image();
@@ -114,41 +142,43 @@
 						if (myToken !== loadToken) {
 							return;
 						}
-						lbImg.src = fullSrc;
+						lightboxImg.src = fullSrc;
 					};
 					preload.src = fullSrc;
 				}
 			}
 
-			function closeLightbox() {
+			async function closeLightbox() {
 				if (!isOpen || isAnimating) {
 					return;
 				}
 
 				isAnimating = true;
 				loadToken++;
-				gsap.to(lbWrap, {
-					scale: 1.15,
-					opacity: 0,
-					duration: 0.28,
-					ease: "power2.in",
-				});
-				gsap.to(lbBackdrop, {
-					opacity: 0,
-					duration: 0.28,
-					ease: "power2.in",
-					onComplete: () => {
-						dialog.close();
-						lbImg.removeAttribute("src");
-						lbImg.classList.remove("is-loaded");
-						isOpen = false;
-						isAnimating = false;
-					},
-				});
+				await Promise.all([
+					animateElement(
+						lightboxWrap,
+						[
+							{ opacity: "1", transform: "scale(1)" },
+							{ opacity: "0", transform: "scale(1.15)" },
+						],
+						{ duration: 280, easing: "ease-in", fill: "forwards" },
+					),
+					animateElement(
+						lightboxBackdrop,
+						[{ opacity: "1" }, { opacity: "0" }],
+						{ duration: 280, easing: "ease-in", fill: "forwards" },
+					),
+				]);
+				lightboxDialog.close();
+				lightboxImg.removeAttribute("src");
+				lightboxImg.classList.remove("is-loaded");
+				isOpen = false;
+				isAnimating = false;
 			}
 
-			dialog.addEventListener("click", closeLightbox);
-			dialog.addEventListener("cancel", (e) => {
+			lightboxDialog.addEventListener("click", closeLightbox);
+			lightboxDialog.addEventListener("cancel", (e) => {
 				e.preventDefault();
 				closeLightbox();
 			});
@@ -162,29 +192,37 @@
 			});
 		}
 
-		document.querySelectorAll<HTMLElement>("[data-lightbox-trigger]").forEach((trigger) => {
-			if (trigger.dataset.lightboxBound === "1") {
+		if (document.documentElement.dataset.lightboxDelegated === "1") {
+			return;
+		}
+		document.documentElement.dataset.lightboxDelegated = "1";
+
+		document.addEventListener("click", (event) => {
+			const target = event.target;
+			if (!(target instanceof Element)) {
 				return;
 			}
-			trigger.dataset.lightboxBound = "1";
 
-			trigger.addEventListener("click", () => {
-				const selector = trigger.dataset.lightboxImgSelector || "img";
-				const img = trigger.querySelector<HTMLImageElement>(selector);
-				if (!img) {
-					return;
-				}
+			const trigger = target.closest<HTMLElement>("[data-lightbox-trigger]");
+			if (!trigger) {
+				return;
+			}
 
-				const thumbSrc = img.currentSrc || img.src;
-				const fullSrc = trigger.dataset.lightboxFullSrc || thumbSrc;
-				const alt = trigger.dataset.lightboxAlt || img.alt;
+			const selector = trigger.dataset.lightboxImgSelector || "img";
+			const img = trigger.querySelector<HTMLImageElement>(selector);
+			if (!img) {
+				return;
+			}
 
-				window.dispatchEvent(
-					new CustomEvent("image-lightbox:open", {
-						detail: { thumbSrc, fullSrc, alt },
-					}),
-				);
-			});
+			const thumbSrc = img.currentSrc || img.src;
+			const fullSrc = trigger.dataset.lightboxFullSrc || thumbSrc;
+			const alt = trigger.dataset.lightboxAlt || img.alt;
+
+			window.dispatchEvent(
+				new CustomEvent("image-lightbox:open", {
+					detail: { thumbSrc, fullSrc, alt },
+				}),
+			);
 		});
 	}
 

@@ -1,6 +1,6 @@
 import { Show, createSignal, createEffect } from "solid-js";
 import { Icon } from "@iconify-icon/solid";
-import gsap from "gsap";
+import { gsap } from "@lib/gsap";
 
 const Hamburger = () => {
 	const [open, setOpen] = createSignal(false);
