@@ -34,6 +34,8 @@ jobs:
       - name: Astro check
         env:
           PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ vars.PUBLIC_CLOUDINARY_CLOUD_NAME }}
+          PUBLIC_CLOUDINARY_API_KEY: ${{ vars.PUBLIC_CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
         run: npx astro check
 
   build:
@@ -56,6 +58,8 @@ jobs:
       - name: Build Astro site
         env:
           PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ vars.PUBLIC_CLOUDINARY_CLOUD_NAME }}
+          PUBLIC_CLOUDINARY_API_KEY: ${{ vars.PUBLIC_CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
         run: npx astro build
 
       - name: Upload Pages artifact
