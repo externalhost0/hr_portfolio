@@ -176,35 +176,35 @@ body {
 
 @font-face {
 	font-family: "BigSlant";
-	src: url("./src/assets/fonts/BIG-Slant-Ultra-Wide-FFP.woff2") format("woff2");
+	src: url("/fonts/BIG-Slant-Ultra-Wide-FFP.woff2") format("woff2");
 	font-weight: normal;
 	font-style: normal;
 	font-display: swap;
 }
 @font-face {
 	font-family: "Libre Caslon Condensed";
-	src: url("./src/assets/fonts/LibreCaslonCondensed[wght].woff2") format("woff2-variations");
+	src: url("/fonts/LibreCaslonCondensed[wght].woff2") format("woff2-variations");
 	font-weight: 300 900;
 	font-style: normal;
 	font-display: swap;
 }
 @font-face {
 	font-family: "Libre Caslon Condensed";
-	src: url("./src/assets/fonts/LibreCaslonCondensed-Italic[wght].woff2") format("woff2-variations");
+	src: url("/fonts/LibreCaslonCondensed-Italic[wght].woff2") format("woff2-variations");
 	font-weight: 300 900;
 	font-style: italic;
 	font-display: swap;
 }
 @font-face {
 	font-family: "Optiker-K";
-	src: url("./src/assets/fonts/Optiker-K.woff2") format("woff2");
+	src: url("/fonts/Optiker-K.woff2") format("woff2");
 	font-weight: normal;
 	font-style: normal;
 	font-display: swap;
 }
 @font-face {
 	font-family: "3t3-5x3";
-	src: url("./src/assets/fonts/3t3-5x3.woff2") format("woff2");
+	src: url("/fonts/3t3-5x3.woff2") format("woff2");
 	font-weight: normal;
 	font-style: normal;
 	font-display: swap;
@@ -213,7 +213,7 @@ body {
 }
 @font-face {
 	font-family: "04b_03b";
-	src: url("./src/assets/fonts/04b_03b.woff2") format("woff2");
+	src: url("/fonts/04b_03b.woff2") format("woff2");
 	font-weight: normal;
 	font-style: normal;
 	font-display: swap;
