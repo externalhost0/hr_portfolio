@@ -16,7 +16,7 @@
 </div>
 
 <script>
-	import { gsap } from "gsap";
+	import { gsap } from "../lib/gsap";
 
 	const INTRO_STORAGE_KEY = "hr-portfolio:intro-seen";
 	const LOADER_CYCLE_DURATION = 0.7;
@@ -44,12 +44,20 @@
 		}
 	};
 
-	if (hasSeenIntro()) {
-		document.querySelectorAll(introElements.join(",")).forEach((el) => {
-			el.remove();
-		});
-		finishIntro();
-	} else {
+	const initIntro = () => {
+		const loadingSquares = document.getElementById("loading-squares");
+		if (!loadingSquares) return;
+		if (loadingSquares.dataset.introInitialized === "true") return;
+		loadingSquares.dataset.introInitialized = "true";
+
+		if (hasSeenIntro()) {
+			document.querySelectorAll(introElements.join(",")).forEach((el) => {
+				el.remove();
+			});
+			finishIntro();
+			return;
+		}
+
 		storeIntroSeen();
 
 		gsap.set(introElements, { display: "flex" });
@@ -132,5 +140,8 @@
 			.call(() => {
 				finishIntro();
 			});
-	}
+	};
+
+	initIntro();
+	document.addEventListener("astro:page-load", initIntro);
 </script>

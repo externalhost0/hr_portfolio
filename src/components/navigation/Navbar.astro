@@ -1,11 +1,8 @@
 ---
-import "iconify-icon";
-
-import Hamburger from "./Hamburger";
 const pathname = Astro.url.pathname;
 ---
 
-<div class="grid grid-cols-3 items-center px-8 py-5 text-white bg-black">
+<div class="grid grid-cols-3 items-center px-4 md:px-8 py-3 md:py-5 text-white bg-black">
 	<div class="justify-self-start flex flex-col gap-0">
 		<a href="/" data-cursor-lock data-cursor-width="8rem" data-cursor-height="3rem" class="hover:animate-[huerotate_10s_linear_0s_infinite] justify-self-start font-medium text-wide whitespace-nowrap"
 			>Hayden Rivas
@@ -32,10 +29,6 @@ const pathname = Astro.url.pathname;
 				<span class="ascii-wave-inner"></span>
 			</div>
 		</a>
-	</div>
-
-	<div class="col-start-3 justify-self-end md:hidden flex items-center">
-		<Hamburger client:idle />
 	</div>
 
 	<div class="hidden md:flex justify-self-center justify-center">
@@ -68,7 +61,7 @@ const pathname = Astro.url.pathname;
 		</div>
 	</div>
 
-	<div class="hidden md:flex justify-self-end items-center">
+	<div class="col-start-3 flex justify-self-end items-center">
 		<div class="flex flex-row justify-evenly items-center gap-2">
 			<a
 				href="https://github.com/externalhost0"

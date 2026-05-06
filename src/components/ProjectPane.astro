@@ -16,7 +16,7 @@ interface Props {
 	minor?: boolean;
 }
 const { title, caption, description, image, images, link, date, minor = false } = Astro.props;
-const projectImages = images?.length ? images : image ? [image] : [];
+const projectImages = (images?.length) ? images : (image ? [image] : []);
 ---
 
 <div class:list={["grid grid-cols-1 items-center gap-4 md:gap-12", minor ? "py-6 md:grid-cols-[20rem_minmax(0,1fr)]" : "py-6 md:grid-cols-[28rem_minmax(0,1fr)]"]}
@@ -56,9 +56,12 @@ const projectImages = images?.length ? images : image ? [image] : [];
 			</div>
 		)
 	}
-	<div class="flex flex-row items-start justify-between gap-4">
-		<div class="flex flex-col gap-1">
-			<a href={link} target="_blank" class:list={["font-bold hover:underline", minor ? "text-xl text-neutral-400" : "text-2xl text-neutral-100"]}>{title}</a>
+	<div class="min-w-0">
+		<div class="flex min-w-0 flex-col gap-1">
+			<div class="flex min-w-0 items-start justify-between gap-3">
+				<a href={link} target="_blank" class:list={["min-w-0 font-bold hover:underline", minor ? "text-xl text-neutral-400" : "text-2xl text-neutral-100"]}>{title}</a>
+				<p class="portfolio-date-stamp shrink-0 mt-2">{date}</p>
+			</div>
 			<p class:list={["text-sm", minor ? "text-neutral-500" : "text-base text-neutral-300"]}>{caption}</p>
 			{description && !minor && (
 				<p class="project-description text-sm text-neutral-500 leading-relaxed mt-0.5" set:html={description} />
@@ -67,7 +70,6 @@ const projectImages = images?.length ? images : image ? [image] : [];
 				<slot />
 			</div>
 		</div>
-		<p class="portfolio-date-stamp shrink-0 mt-2">{date}</p>
 	</div>
 </div>
 

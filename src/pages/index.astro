@@ -3,7 +3,6 @@ import CommonLayout from "../layouts/CommonLayout.astro";
 import Intro from "../components/Intro.astro";
 import Landing from "../components/Landing.astro";
 import Projects from "../components/Projects.astro";
-import "iconify-icon";
 
 import fireoverlayVideo_webm from "../assets/videos/fireoverlay-optimized.webm";
 import fireoverlayVideo_mp4 from "../assets/videos/fireoverlay-optimized.mp4";
@@ -126,13 +125,31 @@ import CaseStudies from "../components/CaseStudies.astro";
 		/>
 	</div>
 	<script>
-        import { gsap } from "@lib/gsap";
+        import { gsap, ScrollTrigger } from "@lib/gsap";
+
+		const INDEX_TRIGGER_IDS = ["index-rightflower-trigger", "index-leftflower-trigger"];
+
+		function cleanupPageTriggers() {
+			INDEX_TRIGGER_IDS.forEach((id) => ScrollTrigger.getById(id)?.kill());
+		}
 
 		function registerPageTriggers() {
-			gsap.to("#rightflower", {
+			const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+			const nameTitle = document.getElementById("nametitle");
+			const rightFlower = document.getElementById("rightflower");
+			const leftFlower = document.getElementById("leftflower");
+
+			cleanupPageTriggers();
+
+			if (pathname !== "/" || !nameTitle || !rightFlower || !leftFlower) {
+				return;
+			}
+
+			gsap.to(rightFlower, {
 				scrollTrigger: {
+					id: "index-rightflower-trigger",
 					scroller: "#lenis-wrapper",
-					trigger: "#nametitle",
+					trigger: nameTitle,
 					start: "top 10%",
 					end: "+=200",
 					scrub: true,
@@ -140,10 +157,11 @@ import CaseStudies from "../components/CaseStudies.astro";
 				opacity: 0,
 				ease: "none",
 			});
-			gsap.to("#leftflower", {
+			gsap.to(leftFlower, {
 				scrollTrigger: {
+					id: "index-leftflower-trigger",
 					scroller: "#lenis-wrapper",
-					trigger: "#nametitle",
+					trigger: nameTitle,
 					start: "top 10%",
 					end: "+=200",
 					scrub: true,
@@ -162,6 +180,7 @@ import CaseStudies from "../components/CaseStudies.astro";
 			setBlackBackground();
 			registerPageTriggers();
 		});
+		document.addEventListener("astro:before-swap", cleanupPageTriggers);
 		setBlackBackground();
 		registerPageTriggers();
 	</script>

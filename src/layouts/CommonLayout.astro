@@ -16,6 +16,9 @@ import Footer from "../components/navigation/Footer.astro";
 		<meta name="generator" content={Astro.generator} />
 		<title>Hayden Rivas</title>
 		<ClientRouter />
+		<script>
+			import "iconify-icon";
+		</script>
 	</head>
 	<body>
 		<div id="cursor-follower" transition:persist aria-hidden="true">
@@ -304,7 +307,7 @@ import Footer from "../components/navigation/Footer.astro";
 		<div id="backdrop" transition:persist class="fixed inset-0 -z-10" aria-hidden="true"></div>
 		<div
 			id="lenis-wrapper"
-			class="fixed inset-5 bg-black rounded-lg overflow-y-scroll z-10 flex flex-col"
+			class="fixed inset-2 md:inset-5 bg-black rounded-lg overflow-y-scroll z-10 flex flex-col"
 		>
 			<header transition:persist class="sticky top-0 left-0 right-0 z-50 w-full">
 				<Navbar />
@@ -358,15 +361,17 @@ import Footer from "../components/navigation/Footer.astro";
 				}
 				lenis?.destroy();
 				lenis = null;
+				wrapperEl = null;
 			}
 
 			function initLenis() {
 				if (lenis) return;
 				wrapperEl = document.getElementById("lenis-wrapper");
 				const lenisContent = document.querySelector("#lenis-content") as HTMLElement;
+				if (!wrapperEl || !lenisContent) return;
 				sbEl = document.getElementById("custom-scrollbar");
 				thumbEl = document.getElementById("custom-scrollbar-thumb");
-				lenis = new Lenis({ wrapper: wrapperEl!, content: lenisContent, autoRaf: false });
+				lenis = new Lenis({ wrapper: wrapperEl, content: lenisContent, autoRaf: false });
 				lenis.on("scroll", ScrollTrigger.update);
 				lenis.on("scroll", () => {
 					updateThumb();
@@ -393,12 +398,21 @@ import Footer from "../components/navigation/Footer.astro";
 				ScrollTrigger.scrollerProxy("#lenis-wrapper", {
 					scrollTop(value?: number) {
 						if (arguments.length && value !== undefined) {
-							lenis!.scrollTo(value, { immediate: true });
+							if (lenis) {
+								lenis.scrollTo(value, { immediate: true });
+							} else if (wrapperEl) {
+								wrapperEl.scrollTop = value;
+							}
 						}
-						return lenis!.scroll;
+						return lenis?.scroll ?? wrapperEl?.scrollTop ?? 0;
 					},
 					getBoundingClientRect() {
-						return { top: 0, left: 0, width: wrapperEl!.clientWidth, height: wrapperEl!.clientHeight };
+						return {
+							top: 0,
+							left: 0,
+							width: wrapperEl?.clientWidth ?? window.innerWidth,
+							height: wrapperEl?.clientHeight ?? window.innerHeight,
+						};
 					},
 				});
 			}
@@ -432,8 +446,8 @@ import Footer from "../components/navigation/Footer.astro";
 			}
 
 			document.addEventListener("astro:before-swap", () => {
-				destroyLenis();
 				ScrollTrigger.getAll().forEach((t) => t.kill());
+				destroyLenis();
 				gsap.set("body", { backgroundColor: "black" });
 				gsap.set("#backdrop", { scale: 1.2 });
 			});

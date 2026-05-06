@@ -1,7 +1,7 @@
 <dialog class="image-lightbox" data-image-lightbox>
 	<div class="image-lightbox-backdrop" data-image-lightbox-backdrop></div>
 	<div class="image-lightbox-img-wrap" data-image-lightbox-img-wrap>
-		<img class="image-lightbox-img" src="" alt="" data-image-lightbox-img />
+		<img class="image-lightbox-img" alt="" data-image-lightbox-img />
 	</div>
 </dialog>
 
@@ -59,6 +59,9 @@
 </style>
 
 <script>
+	const EMPTY_IMAGE_SRC =
+		"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
 	const prefersReducedMotion = () =>
 		window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -171,7 +174,7 @@
 					),
 				]);
 				lightboxDialog.close();
-				lightboxImg.removeAttribute("src");
+				lightboxImg.src = EMPTY_IMAGE_SRC;
 				lightboxImg.classList.remove("is-loaded");
 				isOpen = false;
 				isAnimating = false;
@@ -184,6 +187,9 @@
 			});
 
 			window.addEventListener("image-lightbox:open", (event) => {
+				if (!lightboxDialog.isConnected) {
+					return;
+				}
 				const detail = (event as CustomEvent<{ thumbSrc: string; fullSrc: string; alt: string }>).detail;
 				if (!detail) {
 					return;
@@ -215,6 +221,9 @@
 			}
 
 			const thumbSrc = img.currentSrc || img.src;
+			if (!thumbSrc) {
+				return;
+			}
 			const fullSrc = trigger.dataset.lightboxFullSrc || thumbSrc;
 			const alt = trigger.dataset.lightboxAlt || img.alt;
 
