@@ -1,7 +1,11 @@
-
 <div class="grid grid-cols-3 items-center px-4 md:px-8 py-3 md:py-5 text-white bg-black">
 	<div class="justify-self-start flex flex-col gap-0">
-		<a href="/" data-cursor-lock data-cursor-width="8rem" data-cursor-height="3rem" class="hover:animate-[huerotate_10s_linear_0s_infinite] justify-self-start font-medium text-wide whitespace-nowrap"
+		<a
+			href="/"
+			data-cursor-lock
+			data-cursor-width="8rem"
+			data-cursor-height="3rem"
+			class="hover:animate-[huerotate_10s_linear_0s_infinite] justify-self-start font-medium text-wide whitespace-nowrap"
 			>Hayden Rivas
 			<div
 				class="ascii-wave w-full h-2 overflow-hidden font-mono text-[10px] leading-none animated-brand-cycle whitespace-nowrap"
@@ -86,19 +90,27 @@
 					class="text-4xl hover:scale-110 transition-[color,scale] hover:delay-75 hover:text-[#F5993D]"
 				></iconify-icon>
 			</a>
-			<a
-				href="mailto:haydenr261@gmail.com"
+			<button
+				id="contact-link"
 				data-cursor-lock
+				data-user="haydenr261"
+				data-domain="gmail.com"
+				style="cursor: pointer;"
 				aria-label="Email Link"
-				target="_blank"
-				rel="noopener noreferrer"
 				class="inline-flex size-10 items-center justify-center leading-none"
 			>
 				<iconify-icon
 					icon="mdi:email"
 					class="text-4xl hover:scale-110 transition-[color,scale] hover:delay-75 hover:text-[#dddddd]"
 				></iconify-icon>
-			</a>
+        </button>
+			<script>
+				document.getElementById("contact-link")?.addEventListener("click", function (e) {
+					const user = this.getAttribute("data-user");
+					const domain = this.getAttribute("data-domain");
+					window.location.href = `mailto:${user}@${domain}`;
+				});
+			</script>
 		</div>
 	</div>
 </div>
