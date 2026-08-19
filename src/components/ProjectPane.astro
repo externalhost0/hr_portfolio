@@ -11,7 +11,7 @@ interface Props {
 	description?: string;
 	image?: ImageExtended;
 	images?: ImageExtended[];
-	link: URL;
+	link?: URL;
 	date: string;
 	minor?: boolean;
 }
@@ -25,12 +25,29 @@ const projectImages = (images?.length) ? images : (image ? [image] : []);
 	{
 		projectImages.length > 0 && (
 			<div class="flex flex-col items-center gap-2" data-project-img-wrapper>
-				<a
-					href={link}
-					target="_blank"
-					class="label-hover project-img-link"
-					data-cursor-dot-html='<iconify-icon icon="lucide:external-link"></iconify-icon>'
-				>
+				{link ? (
+					<a
+						href={link}
+						target="_blank"
+						class="label-hover project-img-link"
+						data-cursor-dot-html='<iconify-icon icon="lucide:external-link"></iconify-icon>'
+					>
+						<div class="img-rotate">
+							<div class="project-img-cycle" data-project-img-cycle>
+								{projectImages.map((projectImage, index) => (
+									<Image
+										class:list={["project-img", { "is-active": index === 0 }]}
+										loading="lazy"
+										src={projectImage}
+										format="webp"
+										quality={85}
+										alt={projectImage.alt}
+									/>
+								))}
+							</div>
+						</div>
+					</a>
+				) : (
 					<div class="img-rotate">
 						<div class="project-img-cycle" data-project-img-cycle>
 							{projectImages.map((projectImage, index) => (
@@ -45,7 +62,8 @@ const projectImages = (images?.length) ? images : (image ? [image] : []);
 							))}
 						</div>
 					</div>
-				</a>
+				)}
+
 				{projectImages.length > 1 && (
 					<div class="flex gap-1.5 justify-center" data-dot-container>
 						{projectImages.map((_, i) => (

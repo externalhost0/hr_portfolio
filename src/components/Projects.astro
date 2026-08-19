@@ -4,6 +4,8 @@ import ProjectPane from "./ProjectPane.astro";
 import pmcstore_image from "@assets/imgs/pmc_store.png";
 import pmcdarkmode_image from "@assets/imgs/pmc_darkmode.png";
 
+import mystery_image from "@assets/imgs/mystery.png"
+
 import mythril1_image from "@assets/imgs/mythril1.png";
 import mythril2_image from "@assets/imgs/mythril2.png";
 
@@ -37,6 +39,18 @@ import spotty_image from "@assets/imgs/spotty_r.png";
 	</header>
 	<div class="flex w-full px-8 flex-col">
 		<div class="flex flex-col divide-y-2 divide-solid divide-white/20">
+            <ProjectPane
+                title="Finite Desktop"
+                caption="WIP FEA Simulation and Visualization software"
+                description="Currently working on, stay tuned!"
+                image={{...mystery_image, alt: "It's a mystery"}},
+                date="In Progress"
+            >
+				<iconify-icon title="CMake" icon="devicon:cmake" height={20}></iconify-icon>
+				<iconify-icon title="C++" icon="skill-icons:cpp" height={20}></iconify-icon>
+				<iconify-icon title="CUDA" icon="vscode-icons:file-type-cuda" height={20}></iconify-icon>
+				<iconify-icon title="Golang" icon="skill-icons:golang" height={20}></iconify-icon>
+            </ProjectPane>
 			<ProjectPane
 				title="Mythril Framework"
 				caption="C++20 Vulkan rendering library for Windows, Linux, and MacOS"
