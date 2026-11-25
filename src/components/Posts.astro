@@ -1,0 +1,289 @@
+---
+import { Image } from "astro:assets";
+import postsData from "../data/posts.json";
+
+interface Post {
+	key: string;
+	url: string;
+	author: string;
+	date: string;
+	text: string;
+	kind: "video" | "image";
+	width: number;
+	height: number;
+}
+
+const posts: Post[] = postsData as Post[];
+
+const videoUrls = import.meta.glob<string>("../assets/posts/*.mp4", { eager: true, query: "?url", import: "default" });
+const images = import.meta.glob<ImageMetadata>("../assets/posts/*.jpg", { eager: true, import: "default" });
+
+const dateFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+const items = posts.map((post) => {
+	const image = images[`../assets/posts/${post.key}.jpg`];
+	const video = videoUrls[`../assets/posts/${post.key}.mp4`];
+	if (!image) throw new Error(`missing poster for post ${post.key}, run npm run posts -- add ${post.url}`);
+	const ratio = Math.min(Math.max(post.width / post.height, 0.6), 1.9);
+	return { ...post, ratio, video, image, label: dateFormat.format(new Date(post.date)) };
+});
+
+// equal-area sizing: wide clips shrink and tall clips grow so no card dominates
+const cardWidth = (ratio: number) => `min(calc(var(--card-size) * ${Math.sqrt(ratio)}), 80vw)`;
+const edgeSpacer = (ratio: number) => `max(0px, calc(50% - ${cardWidth(ratio)} / 2 - 1rem))`;
+---
+
+{
+	items.length > 0 && (
+		<section id="posts" class="relative w-full pt-80 pb-0">
+			<header class="mb-2 flex w-full items-end justify-between gap-4 px-8 md:mb-4">
+				<div>
+					<p class="mb-2 ml-2 font-04b text-xs uppercase tracking-widest text-neutral-500">Posted on X</p>
+					<h2 class="font-black font-sans text-4xl leading-none tracking-tight text-white md:text-6xl">Art Experiments</h2>
+				</div>
+				<span data-counter class="pb-1 font-04b text-sm tracking-widest text-neutral-500" />
+			</header>
+
+			<div
+				data-track
+				tabindex="0"
+				role="region"
+				aria-label="Posts from X"
+				style="--card-size: clamp(260px, 38vh, 400px); scrollbar-width: none;"
+				class="relative flex snap-x snap-mandatory items-center gap-4 overflow-x-auto overscroll-x-contain py-2 outline-none"
+			>
+				<div aria-hidden="true" class="flex-none" style={{ width: edgeSpacer(items[0].ratio) }} />
+				{items.map((item) => (
+					<article
+						data-card
+						class="group flex-none shrink-0 snap-center origin-center scale-90 opacity-40 grayscale transition duration-500 ease-out data-active:scale-100 data-active:opacity-100 data-active:filter-none"
+						style={{ width: cardWidth(item.ratio) }}
+					>
+						<div
+							class="relative w-full overflow-hidden rounded-md bg-neutral-900"
+							style={{ aspectRatio: item.ratio }}
+						>
+							<Image
+								src={item.image}
+								alt={item.video ? "" : item.text}
+								width={1100}
+								widths={[550, 1100]}
+								sizes="(min-width: 640px) 550px, 80vw"
+								format="webp"
+								quality={85}
+								loading="lazy"
+								class="absolute inset-0 h-full w-full object-cover"
+							/>
+							{item.video && (
+								<video
+									data-video
+									src={item.video}
+									class="absolute inset-0 h-full w-full object-cover"
+									muted
+									loop
+									playsinline
+									preload="none"
+									disablepictureinpicture
+									aria-label={item.text}
+								/>
+							)}
+							{item.video && (
+								<button
+									type="button"
+									data-sound
+									aria-label="Toggle sound"
+									class="absolute right-3 bottom-3 hidden size-9 place-items-center rounded-full bg-black/70 text-white group-data-active:grid"
+								>
+									<iconify-icon data-sound-icon icon="lucide:volume-x" />
+								</button>
+							)}
+						</div>
+						<div class="mt-3 flex items-start justify-between gap-4">
+							<p class="line-clamp-2 text-sm text-neutral-300">{item.text}</p>
+							<a
+								href={item.url}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="shrink-0 font-04b text-xs uppercase tracking-widest text-neutral-500 transition hover:text-white"
+							>
+								{item.label} ↗
+							</a>
+						</div>
+					</article>
+				))}
+				<div aria-hidden="true" class="flex-none" style={{ width: edgeSpacer(items[items.length - 1].ratio) }} />
+			</div>
+		</section>
+	)
+}
+
+<script>
+	let cleanup: (() => void) | null = null;
+
+	function init() {
+		cleanup?.();
+		cleanup = null;
+
+		const section = document.getElementById("posts");
+		const scroller = document.getElementById("lenis-wrapper");
+		const track = section?.querySelector<HTMLElement>("[data-track]");
+		if (!section || !track) return;
+
+		const cards = [...track.querySelectorAll<HTMLElement>("[data-card]")];
+		const videos = cards.map((card) => card.querySelector<HTMLVideoElement>("[data-video]"));
+		const counter = section.querySelector<HTMLElement>("[data-counter]");
+		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+		let active = -1;
+		let inView = false;
+		let soundOn = false;
+		let frame = 0;
+		const warmed = new Set<number>();
+
+		let centers: number[] = [];
+		const measure = () => {
+			centers = cards.map((card) => card.offsetLeft + card.offsetWidth / 2);
+		};
+
+		// preload="none" until a card is near the focus, then pull the whole file
+		const warm = (index: number) => {
+			const video = videos[index];
+			if (!video || warmed.has(index)) return;
+			warmed.add(index);
+			video.preload = "auto";
+			video.load();
+		};
+
+		const sync = () => {
+			const shouldPlay = inView && !document.hidden && !reducedMotion;
+			videos.forEach((video, i) => {
+				if (!video) return;
+				video.muted = !soundOn;
+				if (i === active && shouldPlay) video.play().catch(() => {});
+				else video.pause();
+			});
+			section.querySelectorAll("[data-sound-icon]").forEach((icon) => {
+				icon.setAttribute("icon", soundOn ? "lucide:volume-2" : "lucide:volume-x");
+			});
+		};
+
+		const setActive = (index: number) => {
+			if (index === active) return;
+			active = index;
+			cards.forEach((card, i) => card.toggleAttribute("data-active", i === index));
+			[index - 1, index, index + 1].forEach(warm);
+			if (counter) counter.textContent = `${String(index + 1).padStart(2, "0")} / ${String(cards.length).padStart(2, "0")}`;
+			sync();
+		};
+
+		const pickNearest = () => {
+			frame = 0;
+			const mid = track.scrollLeft + track.clientWidth / 2;
+			let best = 0;
+			let bestDistance = Infinity;
+			centers.forEach((center, i) => {
+				const distance = Math.abs(center - mid);
+				if (distance < bestDistance) {
+					best = i;
+					bestDistance = distance;
+				}
+			});
+			setActive(best);
+		};
+
+		const onScroll = () => {
+			if (!frame) frame = requestAnimationFrame(pickNearest);
+		};
+
+		const goTo = (index: number) => {
+			const center = centers[Math.max(0, Math.min(cards.length - 1, index))];
+			track.scrollTo({ left: center - track.clientWidth / 2, behavior: "smooth" });
+		};
+
+		const onClick = (event: MouseEvent) => {
+			const card = (event.target as HTMLElement).closest<HTMLElement>("[data-card]");
+			if (!card) return;
+			const index = cards.indexOf(card);
+			if (index !== active) {
+				event.preventDefault();
+				goTo(index);
+			} else if ((event.target as HTMLElement).closest("[data-sound]")) {
+				soundOn = !soundOn;
+				sync();
+			}
+		};
+
+		const onKey = (event: KeyboardEvent) => {
+			if (event.key === "ArrowRight") goTo(active + 1);
+			else if (event.key === "ArrowLeft") goTo(active - 1);
+			else return;
+			event.preventDefault();
+		};
+
+		// lock each trackpad gesture to its first dominant axis so a diagonal swipe never scrolls the page
+		let wheelAxis: "x" | "y" | null = null;
+		let wheelTimer = 0;
+		const releaseWheel = () => {
+			wheelAxis = null;
+			track.style.overscrollBehaviorY = "";
+		};
+		const onWheel = (event: WheelEvent) => {
+			if (event.ctrlKey || (event.deltaX === 0 && event.deltaY === 0)) return;
+			if (!wheelAxis) wheelAxis = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? "x" : "y";
+			clearTimeout(wheelTimer);
+			wheelTimer = window.setTimeout(releaseWheel, 150);
+			if (wheelAxis !== "x") return;
+			// stops Lenis from turning the vertical part into page scroll, and contain stops native chaining
+			event.stopPropagation();
+			track.style.overscrollBehaviorY = "contain";
+		};
+
+		if (reducedMotion) videos.forEach((video) => video && (video.controls = true));
+
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				inView = entry.isIntersecting;
+				sync();
+			},
+			{ root: scroller, threshold: 0.3 },
+		);
+		observer.observe(section);
+
+		const resizeObserver = new ResizeObserver(() => {
+			measure();
+			onScroll();
+		});
+		resizeObserver.observe(track);
+
+		track.addEventListener("scroll", onScroll, { passive: true });
+		track.addEventListener("click", onClick);
+		track.addEventListener("keydown", onKey);
+		track.addEventListener("wheel", onWheel, { passive: true });
+		document.addEventListener("visibilitychange", sync);
+
+		measure();
+		pickNearest();
+		if ("requestIdleCallback" in window) requestIdleCallback(() => warm(0));
+		else setTimeout(() => warm(0), 500);
+
+		cleanup = () => {
+			cancelAnimationFrame(frame);
+			observer.disconnect();
+			resizeObserver.disconnect();
+			track.removeEventListener("scroll", onScroll);
+			track.removeEventListener("click", onClick);
+			track.removeEventListener("keydown", onKey);
+			track.removeEventListener("wheel", onWheel);
+			clearTimeout(wheelTimer);
+			releaseWheel();
+			document.removeEventListener("visibilitychange", sync);
+			videos.forEach((video) => video?.pause());
+		};
+	}
+
+	document.addEventListener("astro:page-load", init);
+	document.addEventListener("astro:before-swap", () => {
+		cleanup?.();
+		cleanup = null;
+	});
+</script>

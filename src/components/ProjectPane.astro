@@ -4,6 +4,7 @@ import { Image } from "astro:assets";
 
 interface ImageExtended extends ImageMetadata {
 	alt: string;
+	pixelated?: boolean;
 }
 interface Props {
 	title: string;
@@ -17,6 +18,11 @@ interface Props {
 }
 const { title, caption, description, image, images, link, date, minor = false } = Astro.props;
 const projectImages = (images?.length) ? images : (image ? [image] : []);
+// below 768px a srcset would raise the intrinsic size past the original and upscale it
+const responsive = (img: ImageMetadata) =>
+	img.width >= 768
+		? { widths: [480, 960, 1440, img.width].filter((w) => w <= img.width), sizes: "(min-width: 768px) 28rem, 100vw" }
+		: {};
 ---
 
 <div class:list={["grid grid-cols-1 items-center gap-4 md:gap-12", minor ? "py-6 md:grid-cols-[20rem_minmax(0,1fr)]" : "py-6 md:grid-cols-[28rem_minmax(0,1fr)]"]}
@@ -36,12 +42,13 @@ const projectImages = (images?.length) ? images : (image ? [image] : []);
 							<div class="project-img-cycle" data-project-img-cycle>
 								{projectImages.map((projectImage, index) => (
 									<Image
-										class:list={["project-img", { "is-active": index === 0 }]}
+										class:list={["project-img", { "is-active": index === 0, pixelated: projectImage.pixelated }]}
 										loading="lazy"
 										src={projectImage}
-										format="webp"
+										format={projectImage.pixelated ? "png" : "webp"}
 										quality={85}
 										alt={projectImage.alt}
+										{...responsive(projectImage)}
 									/>
 								))}
 							</div>
@@ -52,12 +59,13 @@ const projectImages = (images?.length) ? images : (image ? [image] : []);
 						<div class="project-img-cycle" data-project-img-cycle>
 							{projectImages.map((projectImage, index) => (
 								<Image
-									class:list={["project-img", { "is-active": index === 0 }]}
+									class:list={["project-img", { "is-active": index === 0, pixelated: projectImage.pixelated }]}
 									loading="lazy"
 									src={projectImage}
-									format="webp"
+									format={projectImage.pixelated ? "png" : "webp"}
 									quality={85}
 									alt={projectImage.alt}
+									{...responsive(projectImage)}
 								/>
 							))}
 						</div>
@@ -116,6 +124,10 @@ const projectImages = (images?.length) ? images : (image ? [image] : []);
 		object-fit: contain;
 		opacity: 0;
 		transition: opacity 0.45s ease;
+	}
+
+	.project-img.pixelated {
+		image-rendering: pixelated;
 	}
 
 	[data-minor] .project-img {

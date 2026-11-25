@@ -224,7 +224,7 @@
 			if (!thumbSrc) {
 				return;
 			}
-			const fullSrc = trigger.dataset.lightboxFullSrc || thumbSrc;
+			const fullSrc = img.dataset.lightboxFullSrc || trigger.dataset.lightboxFullSrc || thumbSrc;
 			const alt = trigger.dataset.lightboxAlt || img.alt;
 
 			window.dispatchEvent(

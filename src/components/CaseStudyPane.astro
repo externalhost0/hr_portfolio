@@ -1,6 +1,6 @@
 ---
 import type { ImageMetadata } from "astro";
-import { Image } from "astro:assets";
+import { Image, getImage } from "astro:assets";
 import ImageLightbox from "./ImageLightbox.astro";
 
 interface Props {
@@ -20,7 +20,16 @@ type CaseStudyImageSpot = ImageExtended | ImageExtended[];
 
 const { organization, role, timeframe, summary, impact = [], images = [] } = Astro.props;
 const hasBadges = Astro.slots.has("default");
-const imageSpots = images.map((image) => (Array.isArray(image) ? image : [image]));
+const imageSpots = await Promise.all(
+	images.map((spot) =>
+		Promise.all(
+			(Array.isArray(spot) ? spot : [spot]).map(async (image) => ({
+				image,
+				fullSrc: (await getImage({ src: image, format: "webp", quality: 86 })).src,
+			})),
+		),
+	),
+);
 ---
 
 <article
@@ -44,11 +53,14 @@ const imageSpots = images.map((image) => (Array.isArray(image) ? image : [image]
 								data-lightbox-trigger
 								data-lightbox-img-selector=".case-study-image.is-active"
 							>
-								{spotImages.map((image, imageIndex) => (
+								{spotImages.map(({ image, fullSrc }, imageIndex) => (
 									<Image
 										src={image}
 										format="webp"
 										quality={86}
+										widths={[640, 960, 1440, image.width].filter((w) => w <= image.width)}
+										sizes="(min-width: 1024px) 46vw, 100vw"
+										data-lightbox-full-src={fullSrc}
 										loading="lazy"
 										alt={image.alt}
 										class:list={["case-study-image", { "is-active": imageIndex === 0 }]}

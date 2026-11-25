@@ -12,6 +12,9 @@ import mythril2_image from "@assets/imgs/mythril2.png";
 import tsplaycore1_image from "@assets/imgs/tsplaycore1.png";
 import tsplaycore2_image from "@assets/imgs/tsplaycore2.png";
 
+import gsplattery1_image from "@assets/imgs/gsplattery1.png";
+import gsplattery2_image from "@assets/imgs/gsplattery2.png";
+
 import slatedvulkan1_image from "@assets/imgs/slated_vulkan1.png";
 import slatedvulkan2_image from "@assets/imgs/slated_vulkan2.png";
 
@@ -43,7 +46,7 @@ import spotty_image from "@assets/imgs/spotty_r.png";
                 title="Finite Desktop"
                 caption="WIP FEA Simulation and Visualization software"
                 description="Currently working on, stay tuned!"
-                image={{...mystery_image, alt: "It's a mystery"}},
+                image={{...mystery_image, alt: "It's a mystery", pixelated: true}}
                 date="In Progress"
             >
 				<iconify-icon title="CMake" icon="devicon:cmake" height={20}></iconify-icon>
@@ -67,26 +70,18 @@ import spotty_image from "@assets/imgs/spotty_r.png";
 				<iconify-icon title="Vulkan" icon="logos:vulkan" height={20}></iconify-icon>
 			</ProjectPane>
 			<ProjectPane
-				title="ts-play-core"
-				caption="NPM Package for ASCII animations"
-				description="A TypeScript runtime and canvas renderer for composable terminal-style animations. Powers the intro sequence on this site and is published on npm."
+				title="Gaussian Splattery"
+				caption="Real-time 3D Gaussian Splatting viewer built on Mythril"
+				description="A C++20 implementation of 3D Gaussian Splatting for Real-Time Radiance Field Rendering. Loads pretrained .ply scenes with spherical harmonics and renders over a million splats at interactive rates, using a GPU radix sort for depth ordering."
 				images={[
-					{ ...tsplaycore1_image, alt: "ts-play-core ASCII animation screenshot" },
-					{ ...tsplaycore2_image, alt: "ts-play-core terminal output screenshot" },
+					{ ...gsplattery1_image, alt: "Gaussian Splattery viewer rendering a room scene" },
+					{ ...gsplattery2_image, alt: "Gaussian Splattery viewer rendering a Lego dinosaur exhibit" },
 				]}
-				link={new URL("https://github.com/externalhost0/ts-play-core")}
-				date="2025"
+				date="2026"
 			>
-				<iconify-icon title="Typescript" icon="devicon:typescript" height={20}></iconify-icon>
-			</ProjectPane>
-			<ProjectPane
-				title="spotty.nvim"
-				caption="Neovim plugin for displaying Spotify information inside Lualine"
-				description="A lightweight plugin that queries the Spotify API and surfaces live track info like current progress, duration and song title, all inside Lualine status bars with minimal hassle."
-				image={{ ...spotty_image, alt: "Lualine showing spotty.nvim" }}
-				link={new URL("https://github.com/externalhost0/spotty.nvim")}
-				date="2025"
-				><iconify-icon title="Lua" icon="material-icon-theme:lua" height={20}></iconify-icon>
+				<iconify-icon title="CMake" icon="devicon:cmake" height={20}></iconify-icon>
+				<iconify-icon title="C++" icon="skill-icons:cpp" height={20}></iconify-icon>
+				<iconify-icon title="Vulkan" icon="logos:vulkan" height={20}></iconify-icon>
 			</ProjectPane>
 			<ProjectPane
 				title="Slated_Vulkan"
@@ -122,6 +117,28 @@ import spotty_image from "@assets/imgs/spotty_r.png";
 		</div>
 		<p class="text-4xl font-bold text-neutral-500 py-4 leading-none">Smaller Projects</p>
 		<div class="flex flex-col divide-y-2 divide-solid divide-white/20">
+			<ProjectPane
+				minor
+				title="ts-play-core"
+				caption="NPM Package for ASCII animations"
+				images={[
+					{ ...tsplaycore1_image, alt: "ts-play-core ASCII animation screenshot" },
+					{ ...tsplaycore2_image, alt: "ts-play-core terminal output screenshot" },
+				]}
+				link={new URL("https://github.com/externalhost0/ts-play-core")}
+				date="2025"
+			>
+				<iconify-icon title="Typescript" icon="devicon:typescript" height={20}></iconify-icon>
+			</ProjectPane>
+			<ProjectPane
+				minor
+				title="spotty.nvim"
+				caption="Neovim plugin for displaying Spotify information inside Lualine"
+				image={{ ...spotty_image, alt: "Lualine showing spotty.nvim" }}
+				link={new URL("https://github.com/externalhost0/spotty.nvim")}
+				date="2025"
+				><iconify-icon title="Lua" icon="material-icon-theme:lua" height={20}></iconify-icon>
+			</ProjectPane>
 			<ProjectPane
 				minor
 				title="Slated_OpenGL"
